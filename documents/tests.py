@@ -314,10 +314,14 @@ class DocumentPrintTests(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, self.document.number)
 		self.assertContains(response, "window.print()")
-		self.assertContains(response, "Payment details")
+		self.assertContains(response, "Banking Details")
 		self.assertContains(response, "Terms & Conditions")
 		self.assertContains(response, "Goods once sold are not returnable")
 		self.assertContains(response, "Official Bank Account details remain unchanged")
+		self.assertContains(response, "data:image/png;base64")
+		self.assertContains(response, "Banking Details")
+		self.assertContains(response, "Payable To")
+		self.assertContains(response, "Jacinta")
 
 	def test_pdf_download_returns_valid_pdf(self):
 		response = self.client.get(reverse("documents:pdf", args=(self.document.pk,)))

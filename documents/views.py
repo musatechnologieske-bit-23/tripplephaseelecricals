@@ -21,20 +21,10 @@ from .forms import DocumentForm, DocumentItemFormSet
 from .models import Document, DocumentItem, DocumentType
 
 
-def _logo_data_uri(company):
-	try:
-		if company.logo:
-			with company.logo.open("rb") as logo_file:
-				logo_bytes = logo_file.read()
-			content_type = mimetypes.guess_type(company.logo.name)[0] or "image/png"
-		else:
-			logo_path = Path(settings.BASE_DIR) / "static" / "img" / "logo.svg"
-			logo_bytes = logo_path.read_bytes()
-			content_type = "image/svg+xml"
-	except (OSError, ValueError):
-		logo_path = Path(settings.BASE_DIR) / "static" / "img" / "logo.svg"
-		logo_bytes = logo_path.read_bytes()
-		content_type = "image/svg+xml"
+def _logo_data_uri():
+	logo_path = Path(settings.BASE_DIR) / "static" / "img" / "tripplephase-wordmark.png"
+	logo_bytes = logo_path.read_bytes()
+	content_type = mimetypes.guess_type(logo_path.name)[0] or "image/png"
 	encoded_logo = base64.b64encode(logo_bytes).decode("ascii")
 	return f"data:{content_type};base64,{encoded_logo}"
 
@@ -44,7 +34,7 @@ def _print_context(document):
 	return {
 		"document": document,
 		"company": company,
-		"logo_data_uri": _logo_data_uri(company),
+		"logo_data_uri": _logo_data_uri(),
 	}
 
 

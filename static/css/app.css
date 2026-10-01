@@ -47,6 +47,8 @@
 .brand-mark i:nth-child(2) { top: 13px; width: 34px; }
 .brand-mark i:nth-child(3) { top: 19px; width: 25px; }
 .brand-mark b { position: absolute; top: 7px; right: 2px; width: 6px; height: 6px; border-radius: 50%; background: #e10600; box-shadow: -7px 9px 0 #0a2eff; }
+.app-brand-logo { display: block; width: 178px; height: 78px; flex: 0 0 178px; border-radius: 3px; background: #fff; object-fit: contain; }
+.login-brand-logo { width: 205px; height: 90px; flex-basis: 205px; }
 
 .nav-link {
   display: flex;
@@ -157,6 +159,8 @@ form input:focus, form textarea:focus { border-color: #0a2eff; outline: 2px soli
 }
 
 @media (max-width: 640px) {
+  .app-brand-logo { width: 150px; height: 66px; flex-basis: 150px; }
+  .login-brand-logo { width: 190px; height: 83px; flex-basis: 190px; }
   .stat-card { padding: 15px; }
   .stat-card > p:nth-child(2) { font-size: 1.2rem; }
   .register-filters .secondary-button { width: 100%; }

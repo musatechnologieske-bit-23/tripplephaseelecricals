@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111111">
+  <link rel="icon" type="image/png" href="{% static 'img/tripplephase-favicon.png' %}">
   <title>{% block title %}Workspace{% endblock %} | Tripple Phase Electricals</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
@@ -14,8 +15,7 @@
   <div class="app-shell min-h-screen lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
     <aside class="sidebar flex flex-col border-b border-black/10 bg-white lg:min-h-screen lg:border-b-0 lg:border-r">
       <a class="brand flex items-center gap-3 px-6 py-6" href="{% url 'home' %}">
-        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><b></b></span>
-        <span><strong class="block text-sm font-extrabold uppercase leading-tight">Tripple Phase</strong><span class="text-xs text-neutral-500">Electricals</span></span>
+        <img class="app-brand-logo" src="{% static 'img/tripplephase-wordmark.png' %}" alt="Tripple Phase Electricals">
       </a>
       <div class="mx-6 h-px bg-black/10"></div>
       <nav class="main-nav flex gap-1 overflow-x-auto px-3 py-4 lg:flex-col" aria-label="Main navigation">
