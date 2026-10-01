@@ -50,8 +50,10 @@ The included `railway.json` runs static collection, database migrations, and Gun
 5. Add this Railway variable for WeasyPrint's Debian system dependencies:
 
    ```text
-   RAILPACK_DEPLOY_APT_PACKAGES=libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libcairo2 libffi-dev shared-mime-info
+   RAILPACK_DEPLOY_APT_PACKAGES=libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libglib2.0-0t64 libcairo2 libffi-dev shared-mime-info
    ```
+
+   `libglib2.0-0t64` supplies `libgobject-2.0.so.0`, which WeasyPrint needs when loading its native text-rendering backend. If Railway already has this variable, append `libglib2.0-0t64` to its existing value, save it, and redeploy so the image is rebuilt.
 
 6. After the first deployment, create an administrator using Railway's application shell:
 

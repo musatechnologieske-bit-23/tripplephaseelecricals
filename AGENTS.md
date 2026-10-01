@@ -108,7 +108,7 @@ Do not start the next phase until I confirm the current one works.
 - Keep `railway.json` minimal: startCommand runs `collectstatic`, `migrate`, then gunicorn.
 - WeasyPrint needs system libraries. Document this in the README: set the Railway
   variable `RAILPACK_DEPLOY_APT_PACKAGES` to
-  `libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libcairo2 libffi-dev shared-mime-info`
+  `libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libglib2.0-0t64 libcairo2 libffi-dev shared-mime-info`
   (the package is `libgdk-pixbuf-2.0-0` on Debian Trixie).
 - `.gitignore` must exclude `venv/`, `.env`, `staticfiles/`, `media/`, `__pycache__/`.
   It already exists; do not commit those.
