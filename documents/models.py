@@ -106,6 +106,13 @@ class Document(models.Model):
 		super().save(*args, **kwargs)
 
 	def clean(self):
+		if (
+			self._state.adding
+			and self.doc_type == DocumentType.INVOICE
+			and self.status == self.Status.DRAFT
+		):
+			self.status = self.Status.UNPAID
+
 		quotation_statuses = {
 			self.Status.DRAFT,
 			self.Status.SENT,

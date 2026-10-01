@@ -227,6 +227,38 @@ class DocumentFormTests(TestCase):
 		self.assertEqual(document.total, Decimal("2320.00"))
 		self.assertEqual(document.items.count(), 1)
 
+	def test_create_invoice_form_saves_with_unpaid_status(self):
+		response = self.client.post(
+			reverse("documents:create"),
+			{
+				"doc_type": "invoice",
+				"issue_date": "2026-09-28",
+				"valid_until": "",
+				"due_date": "",
+				"client_name": "Invoice Client",
+				"client_phone": "",
+				"client_email": "",
+				"client_address": "",
+				"client_pin": "",
+				"notes": "",
+				"payment_terms": "cash",
+				"apply_vat": "on",
+				"items-TOTAL_FORMS": "1",
+				"items-INITIAL_FORMS": "0",
+				"items-MIN_NUM_FORMS": "1",
+				"items-MAX_NUM_FORMS": "1000",
+				"items-0-description": "Installation",
+				"items-0-quantity": "1.00",
+				"items-0-unit_price": "1000.00",
+				"items-0-id": "",
+			},
+		)
+
+		self.assertRedirects(response, reverse("documents:list"))
+		invoice = Document.objects.get()
+		self.assertEqual(invoice.doc_type, DocumentType.INVOICE)
+		self.assertEqual(invoice.status, Document.Status.UNPAID)
+
 	def test_document_pages_require_login(self):
 		self.client.logout()
 
