@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if document %}Edit {{ document.number }}{% else %}New document{% endif %}{% endblock %}
+{% block page_title %}{% if document %}Edit {{ document.number }}{% else %}New document{% endif %}{% endblock %}
+{% block content %}
+<form method="post" class="max-w-5xl" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="mb-5 text-sm text-[#e10600]">{{ form.non_field_errors }}</div>{% endif %}
+  <section class="border-b border-black/10 pb-7">
+    <h2 class="mb-5 text-base font-bold">Document and client</h2>
+    <div class="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+      {% for field in form %}
+      <div class="{% if field.name == 'client_address' or field.name == 'notes' %}sm:col-span-2{% endif %} {% if field.name == 'apply_vat' %}flex items-center gap-3 self-end pb-3{% endif %} {% if field.name == 'payment_terms' %}sm:col-span-2{% endif %}">
+        {% if field.name == 'apply_vat' %}
+          {{ field }}<label class="text-sm font-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {% elif field.name == 'payment_terms' %}
+          <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          <div class="flex flex-wrap gap-3 rounded border border-black/10 bg-white p-3">
+            {% for radio in field %}
+            <label class="flex items-center gap-2 rounded border border-black/10 px-3 py-2 text-sm">
+              {{ radio.tag }} {{ radio.choice_label }}
+            </label>
+            {% endfor %}
+          </div>
+        {% else %}
+          <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+        {% endif %}
+        {% for error in field.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="py-7">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-base font-bold">Items</h2>
+      <button class="secondary-button" id="add-item" type="button"><span aria-hidden="true">+</span> Add item</button>
+    </div>
+    {{ item_formset.management_form }}
+    {% if item_formset.non_form_errors %}<p class="mb-3 text-sm text-[#e10600]">{{ item_formset.non_form_errors }}</p>{% endif %}
+    <div class="overflow-x-auto">
+      <table id="item-table" class="w-full min-w-[680px] border-collapse text-left text-sm" data-vat-rate="{{ company.vat_rate }}">
+        <thead><tr class="border-b border-black/10 text-xs uppercase text-neutral-500"><th class="py-3 pr-3">Description</th><th class="w-28 py-3 pr-3">Quantity</th><th class="w-40 py-3 pr-3">Unit price</th><th class="w-36 py-3 pr-3 text-right">Line total</th><th class="w-24 py-3 text-right">Remove</th></tr></thead>
+        <tbody id="item-rows">
+          {% for item_form in item_formset %}
+          <tr class="item-row border-b border-black/5 align-top" {% if item_form.DELETE.value %}hidden{% endif %}>
+            <td class="py-3 pr-3">{{ item_form.id }}{{ item_form.description }}{% for error in item_form.description.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}</td>
+            <td class="py-3 pr-3">{{ item_form.quantity }}{% for error in item_form.quantity.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}</td>
+            <td class="py-3 pr-3">{{ item_form.unit_price }}{% for error in item_form.unit_price.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}</td>
+            <td class="line-total py-3 pr-3 text-right tabular-nums">0.00</td>
+            <td class="py-3 text-right">{{ item_form.DELETE }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><th class="pt-4 text-right font-medium" colspan="3">Subtotal</th><td class="pt-4 text-right tabular-nums" id="subtotal-preview">0.00</td><td></td></tr>
+          <tr><th class="pt-2 text-right font-medium" colspan="3">VAT ({{ company.vat_rate }}%)</th><td class="pt-2 text-right tabular-nums" id="vat-preview">0.00</td><td></td></tr>
+          <tr class="text-base font-bold"><th class="pt-3 text-right" colspan="3">Total (KES)</th><td class="pt-3 text-right tabular-nums" id="total-preview">0.00</td><td></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    {% for error in item_formset.errors %}{% if error %}<p class="mt-2 text-xs text-[#e10600]">{{ error }}</p>{% endif %}{% endfor %}
+  </section>
+
+  <div class="flex flex-wrap gap-3 border-t border-black/10 pt-5">
+    <button class="primary-button" type="submit">Save document</button>
+    <a class="secondary-button" href="{% url 'documents:list' %}">Cancel</a>
+  </div>
+</form>
+<template id="empty-item-row">
+  <tr class="item-row border-b border-black/5 align-top">
+    <td class="py-3 pr-3">{{ item_formset.empty_form.id }}{{ item_formset.empty_form.description }}</td>
+    <td class="py-3 pr-3">{{ item_formset.empty_form.quantity }}</td>
+    <td class="py-3 pr-3">{{ item_formset.empty_form.unit_price }}</td>
+    <td class="line-total py-3 pr-3 text-right tabular-nums">0.00</td>
+    <td class="py-3 text-right">{{ item_formset.empty_form.DELETE }}</td>
+  </tr>
+</template>
+<script src="{% static 'js/documents.js' %}" defer></script>
+{% endblock %}

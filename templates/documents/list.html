@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{% if selected_type == 'quotation' %}Quotations{% elif selected_type == 'sales' %}Sales{% elif selected_type == 'invoice' %}Invoices{% else %}Transactions{% endif %}{% endblock %}
+{% block page_title %}{% if selected_type == 'quotation' %}Quotations{% elif selected_type == 'sales' %}Sales{% elif selected_type == 'invoice' %}Invoices{% else %}Transactions{% endif %}{% endblock %}
+{% block content %}
+<div class="register-toolbar mb-6 flex flex-wrap items-center justify-between gap-4">
+  <p class="text-sm text-neutral-600">{% if selected_type == 'sales' %}Paid invoice transactions{% elif selected_type == 'quotation' %}Quotation register{% elif selected_type == 'invoice' %}Invoice register{% else %}All company transactions{% endif %}</p>
+  <div class="flex flex-wrap gap-3">
+    {% if selected_type != 'invoice' and selected_type != 'sales' %}<a class="primary-button" href="{% url 'documents:create' %}?type=quotation"><span aria-hidden="true">+</span> New quotation</a>{% endif %}
+    {% if selected_type != 'quotation' %}<a class="primary-button" href="{% url 'documents:create' %}?type=invoice"><span aria-hidden="true">+</span> New invoice</a>{% endif %}
+  </div>
+</div>
+<form class="register-filters mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(180px,1fr)_160px_155px_155px_auto_auto]" method="get">
+  {% if selected_type != 'all' %}<input type="hidden" name="type" value="{{ selected_type }}">{% endif %}
+  <input type="search" name="q" value="{{ search }}" placeholder="Search number or client" aria-label="Search number or client">
+  <select name="status" aria-label="Filter by status">
+    <option value="">All statuses</option>
+    {% for value, label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <input type="date" name="date_from" value="{{ date_from }}" aria-label="From date">
+  <input type="date" name="date_to" value="{{ date_to }}" aria-label="To date">
+  <button class="secondary-button" type="submit">Filter</button>
+  <a class="secondary-button" href="{% url 'documents:list' %}?type={{ selected_type }}">Reset</a>
+</form>
+{% if documents %}
+<div class="register-table overflow-x-auto">
+  <table class="w-full min-w-[760px] border-collapse text-left text-sm">
+    <thead><tr class="border-b border-black/10 text-xs uppercase text-neutral-500"><th class="py-3 pr-4">Number</th><th class="py-3 pr-4">Date</th><th class="py-3 pr-4">Type</th><th class="py-3 pr-4">Client</th><th class="py-3 pr-4">Status</th><th class="py-3 pr-4 text-right">Total (KES)</th><th class="py-3 text-right">Actions</th></tr></thead>
+    <tbody>
+      {% for document in documents %}
+      <tr class="transaction-row border-b border-black/5 last:border-0">
+        <td class="py-4 pr-4 font-bold">{{ document.number }}</td>
+        <td class="py-4 pr-4">{{ document.issue_date|date:"d M Y" }}</td>
+        <td class="py-4 pr-4">{{ document.get_doc_type_display }}</td>
+        <td class="py-4 pr-4">{{ document.client_name }}</td>
+        <td class="py-4 pr-4">{{ document.get_status_display }}</td>
+        <td class="py-4 pr-4 text-right tabular-nums">{{ document.total|floatformat:2 }}</td>
+        <td class="py-4 text-right">
+          <div class="flex flex-wrap justify-end gap-3">
+            <a class="font-semibold text-[#0a2eff] hover:underline" href="{% url 'documents:print' document.pk %}">Print</a>
+            <a class="font-semibold text-neutral-700 hover:underline" href="{% url 'documents:edit' document.pk %}">Edit</a>
+            {% if document.doc_type == 'quotation' %}
+            <form method="post" action="{% url 'documents:convert' document.pk %}">{% csrf_token %}<button class="font-semibold text-[#e10600] hover:underline" type="submit">Convert</button></form>
+            {% endif %}
+            {% if document.doc_type == 'invoice' and document.status != 'paid' %}
+            <form method="post" action="{% url 'documents:mark-paid' document.pk %}">{% csrf_token %}<input type="hidden" name="paid_date" value="{% now 'Y-m-d' %}"><input type="hidden" name="payment_method" value="cash"><button class="font-semibold text-[#0a2eff] hover:underline" type="submit">Mark paid</button></form>
+            {% endif %}
+            <form method="post" action="{% url 'documents:duplicate' document.pk %}">{% csrf_token %}<button class="font-semibold text-neutral-700 hover:underline" type="submit">Duplicate</button></form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="mt-5 flex items-center justify-between gap-4 text-sm text-neutral-600">
+  <span>{{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</span>
+  <div class="flex gap-2">
+    {% if page_obj.has_previous %}<a class="secondary-button" href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">Previous</a>{% endif %}
+    {% if page_obj.has_next %}<a class="secondary-button" href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">Next</a>{% endif %}
+  </div>
+</div>
+{% else %}
+<div class="empty-register border-y border-black/10 py-12 text-center">
+  <span class="empty-register-mark" aria-hidden="true">—</span>
+  <h2 class="text-lg font-bold">No matching transactions</h2>
+  <p class="mt-2 text-sm text-neutral-600">Adjust the filters or create a new document.</p>
+</div>
+{% endif %}
+{% endblock %}

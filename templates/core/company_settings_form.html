@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Company settings{% endblock %}
+{% block page_title %}Company settings{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data" class="max-w-3xl">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="mb-5 text-sm text-[#e10600]">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+    {% for field in form %}
+      <div class="{% if field.name == 'address' or field.name == 'payment_details' or field.name == 'terms' %}sm:col-span-2{% endif %}">
+        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<p class="mt-1 text-xs text-neutral-500">{{ field.help_text }}</p>{% endif %}
+        {% for error in field.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="mt-8 flex items-center gap-3 border-t border-black/10 pt-5">
+    <button class="primary-button" type="submit">Save settings</button>
+    <a class="text-sm text-neutral-600 hover:text-black" href="{% url 'home' %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

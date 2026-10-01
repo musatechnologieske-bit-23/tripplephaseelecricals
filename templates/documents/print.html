@@ -1,0 +1,161 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ document.get_doc_type_display }} {{ document.number }}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 13mm 14mm 16mm;
+      @bottom-right {
+        color: #737373;
+        content: "Page " counter(page) " of " counter(pages);
+        font: 8pt "DejaVu Sans", sans-serif;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #171717; font: 9pt/1.42 "DejaVu Sans", sans-serif; }
+    .toolbar { display: flex; justify-content: flex-end; gap: 8px; margin: 18px auto; max-width: 210mm; }
+    .toolbar a, .toolbar button { border: 1px solid #bdbdbd; border-radius: 3px; background: #fff; color: #171717; cursor: pointer; font: inherit; padding: 8px 12px; text-decoration: none; }
+    .toolbar .download { border-color: #e10600; background: #e10600; color: #fff; }
+    .sheet { width: 100%; max-width: 210mm; min-height: 297mm; margin: 0 auto; padding: 13mm 14mm 16mm; background: #fff; box-shadow: 0 2px 18px #0002; }
+    .company-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; border-bottom: 2px solid #171717; padding-bottom: 13px; }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand img { display: block; width: 76px; height: 54px; object-fit: contain; }
+    .company-name { margin: 0; font-size: 15pt; font-weight: 800; }
+    .company-contact { margin-top: 4px; color: #555; font-size: 8pt; white-space: pre-line; }
+    .document-heading { min-width: 132px; text-align: right; }
+    .document-heading h1 { margin: 0; color: #e10600; font-size: 18pt; line-height: 1.1; }
+    .document-number { margin-top: 5px; font-size: 10pt; font-weight: 700; }
+    .kra { margin-top: 5px; color: #555; font-size: 8pt; }
+    .metadata { display: flex; justify-content: space-between; gap: 20px; padding: 16px 0 12px; }
+    .eyebrow { margin: 0 0 5px; color: #737373; font-size: 7pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .client-name { margin: 0; font-size: 11pt; font-weight: 700; }
+    .client-details, .date-details { margin-top: 4px; color: #444; font-size: 8pt; white-space: pre-line; }
+    .date-details { text-align: right; }
+    table { width: 100%; border-collapse: collapse; }
+    .items { margin-top: 6px; }
+    .items thead { display: table-header-group; }
+    .items th { background: #f1f1ee; color: #444; font-size: 7pt; font-weight: 700; text-align: left; text-transform: uppercase; }
+    .items th, .items td { border-bottom: 1px solid #dededb; padding: 8px 7px; }
+    .items tbody tr { break-inside: avoid; page-break-inside: avoid; }
+    .items .number { text-align: right; white-space: nowrap; }
+    .items td:first-child { overflow-wrap: anywhere; }
+    .totals { width: 60%; margin: 12px 0 0 auto; break-inside: avoid; page-break-inside: avoid; }
+    .totals th, .totals td { padding: 4px 0; }
+    .totals th { color: #555; font-weight: 400; text-align: left; }
+    .totals td { text-align: right; white-space: nowrap; }
+    .totals .grand-total th, .totals .grand-total td { border-top: 1px solid #171717; padding-top: 8px; color: #171717; font-size: 12pt; font-weight: 800; }
+    .notes { margin-top: 18px; border-top: 1px solid #dededb; padding-top: 11px; }
+    .notes h2 { margin: 0 0 4px; font-size: 8pt; }
+    .notes p { margin: 0; color: #444; font-size: 8pt; white-space: pre-line; overflow-wrap: anywhere; }
+    .bottom-details { display: grid; grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); gap: 16px; margin-top: 10px; }
+    .bottom-details section { min-width: 0; }
+    .bottom-details p { margin: 0; font-size: 8pt; line-height: 1.3; white-space: pre-line; }
+    .signature { margin-top: 28px; color: #555; font-size: 8pt; }
+    @media screen {
+      body { min-height: 100vh; background: #e9e9e6; }
+      .sheet { min-height: 297mm; }
+    }
+    @media print {
+      .toolbar { display: none; }
+      .sheet { max-width: none; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  {% if not pdf_mode %}
+  <nav class="toolbar" aria-label="Print actions">
+    <a href="{% url 'documents:edit' document.pk %}">Edit</a>
+    {% if document.doc_type == 'quotation' %}
+    <form method="post" action="{% url 'documents:convert' document.pk %}" style="display:inline-block; margin:0;">{% csrf_token %}<button type="submit">Convert to invoice</button></form>
+    {% endif %}
+    {% if document.doc_type == 'invoice' and document.status != 'paid' %}
+    <form method="post" action="{% url 'documents:mark-paid' document.pk %}" style="display:inline-block; margin:0;">{% csrf_token %}<input type="hidden" name="paid_date" value="{% now 'Y-m-d' %}"><select name="payment_method" aria-label="Payment method" style="padding:8px 10px; border:1px solid #bdbdbd; border-radius:3px; margin-right:6px;">
+      <option value="cash">Cash</option>
+      <option value="mpesa">M-Pesa</option>
+      <option value="bank">Bank</option>
+      <option value="cheque">Cheque</option>
+    </select><button type="submit">Mark as paid</button></form>
+    {% endif %}
+    <form method="post" action="{% url 'documents:duplicate' document.pk %}" style="display:inline-block; margin:0;">{% csrf_token %}<button type="submit">Duplicate</button></form>
+    <a class="download" href="{% url 'documents:pdf' document.pk %}">Download PDF</a>
+    <button type="button" onclick="window.print()">Print</button>
+  </nav>
+  {% endif %}
+  <main class="sheet">
+    <header class="company-header">
+      <div class="brand">
+        <img src="{{ logo_data_uri }}" alt="{{ company.name }} logo">
+        <div>
+          <h2 class="company-name">{{ company.name }}</h2>
+          <div class="company-contact">{{ company.address }}{% if company.phone %}
+{{ company.phone }}{% endif %}{% if company.email %} · {{ company.email }}{% endif %}</div>
+        </div>
+      </div>
+      <div class="document-heading">
+        <h1>{% if document.doc_type == "invoice" %}INVOICE{% else %}QUOTATION{% endif %}</h1>
+        <div class="document-number">{{ document.number }}</div>
+        <div class="kra">KRA PIN {{ company.kra_pin }}</div>
+        {% if document.doc_type == "quotation" %}
+        <div class="kra">Payment term: {{ document.get_payment_terms_display }}</div>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="metadata">
+      <div>
+        <p class="eyebrow">Prepared for</p>
+        <p class="client-name">{{ document.client_name }}</p>
+        <div class="client-details">{% if document.client_address %}{{ document.client_address }}{% endif %}{% if document.client_phone %}
+{{ document.client_phone }}{% endif %}{% if document.client_email %}
+{{ document.client_email }}{% endif %}{% if document.client_pin %}
+KRA PIN {{ document.client_pin }}{% endif %}</div>
+      </div>
+      <div class="date-details">
+        <p><strong>Issue date</strong> &nbsp; {{ document.issue_date|date:"d M Y" }}</p>
+        {% if document.doc_type == "quotation" and document.valid_until %}<p><strong>Valid until</strong> &nbsp; {{ document.valid_until|date:"d M Y" }}</p>{% endif %}
+        {% if document.doc_type == "invoice" and document.due_date %}<p><strong>Due date</strong> &nbsp; {{ document.due_date|date:"d M Y" }}</p>{% endif %}
+        {% if document.payment_terms %}<p><strong>Payment term</strong> &nbsp; {{ document.get_payment_terms_display }}</p>{% endif %}
+      </div>
+    </section>
+
+    <table class="items">
+      <thead><tr><th>Description</th><th class="number">Qty</th><th class="number">Unit price (KES)</th><th class="number">Amount (KES)</th></tr></thead>
+      <tbody>
+        {% for item in document.items.all %}
+        <tr><td>{{ item.description }}</td><td class="number">{{ item.quantity|floatformat:2 }}</td><td class="number">{{ item.unit_price|floatformat:2 }}</td><td class="number">{{ item.line_total|floatformat:2 }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <table class="totals">
+      <tbody>
+        <tr><th>Subtotal</th><td>KES {{ document.subtotal|floatformat:2 }}</td></tr>
+        {% if document.apply_vat %}<tr><th>VAT ({{ company.vat_rate }}%)</th><td>KES {{ document.vat_amount|floatformat:2 }}</td></tr>{% endif %}
+        <tr class="grand-total"><th>Total</th><td>KES {{ document.total|floatformat:2 }}</td></tr>
+      </tbody>
+    </table>
+
+    {% if document.notes %}<section class="notes"><h2>Notes</h2><p>{{ document.notes }}</p></section>{% endif %}
+    <div class="bottom-details">
+      {% if company.payment_details %}<section><p class="eyebrow">Payment details</p><p>{{ company.payment_details }}</p></section>{% endif %}
+      {% if company.terms %}<section><p class="eyebrow">Terms & Conditions</p><p>{{ company.terms }}</p></section>{% endif %}
+    </div>
+      <div style="margin-top: 16px; border-top: 1px solid #dededb; padding-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px;">
+      <div style="flex: 1;">
+        <div style="width: 180px; border-bottom: 2px solid #171717; margin-bottom: 8px; height: 32px;"></div>
+        <p style="margin: 0; font-size: 8pt; color: #555;">Authorized signature</p>
+      </div>
+      <div style="text-align: right; color: #555; font-size: 8pt;">
+        <p style="margin: 0;">Prepared by {{ document.created_by.get_full_name|default:document.created_by.username }}</p>
+        <p style="margin: 4px 0 0;">{{ document.issue_date|date:"d M Y" }}</p>
+      </div>
+    </div>
+    <p class="signature">Thank you for your business.</p>
+  </main>
+</body>
+</html>
