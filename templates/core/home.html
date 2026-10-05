@@ -5,26 +5,31 @@
 <section class="stats-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-5" aria-label="Current month statistics">
   <article class="stat-card">
     <p class="eyebrow">Quoted</p>
+    <span class="stat-icon material-symbols-rounded" aria-hidden="true">request_quote</span>
     <p class="mt-3 text-2xl font-bold tabular-nums">KES {{ stats.quoted_total|floatformat:2 }}</p>
     <p class="mt-2 text-xs text-neutral-500">{{ stats.quoted_count }} quotations</p>
   </article>
   <article class="stat-card">
     <p class="eyebrow">Invoiced</p>
+    <span class="stat-icon material-symbols-rounded" aria-hidden="true">receipt_long</span>
     <p class="mt-3 text-2xl font-bold tabular-nums">KES {{ stats.invoiced_total|floatformat:2 }}</p>
     <p class="mt-2 text-xs text-neutral-500">{{ stats.invoiced_count }} invoices</p>
   </article>
   <article class="stat-card">
     <p class="eyebrow">Paid</p>
+    <span class="stat-icon material-symbols-rounded" aria-hidden="true">payments</span>
     <p class="mt-3 text-2xl font-bold tabular-nums">KES {{ stats.paid_total|floatformat:2 }}</p>
     <p class="mt-2 text-xs text-neutral-500">{{ stats.paid_count }} paid</p>
   </article>
   <article class="stat-card">
     <p class="eyebrow">Outstanding</p>
+    <span class="stat-icon material-symbols-rounded" aria-hidden="true">account_balance_wallet</span>
     <p class="mt-3 text-2xl font-bold tabular-nums">KES {{ stats.outstanding_total|floatformat:2 }}</p>
     <p class="mt-2 text-xs text-neutral-500">Open balance</p>
   </article>
   <article class="stat-card">
     <p class="eyebrow">VAT</p>
+    <span class="stat-icon material-symbols-rounded" aria-hidden="true">percent</span>
     <p class="mt-3 text-2xl font-bold tabular-nums">KES {{ stats.vat_total|floatformat:2 }}</p>
     <p class="mt-2 text-xs text-neutral-500">{{ stats.document_count }} records</p>
   </article>

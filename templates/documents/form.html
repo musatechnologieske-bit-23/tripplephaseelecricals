@@ -34,7 +34,7 @@
   <section class="py-7">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h2 class="text-base font-bold">Items</h2>
-      <button class="secondary-button" id="add-item" type="button"><span aria-hidden="true">+</span> Add item</button>
+      <button class="secondary-button" id="add-item" type="button"><span class="material-symbols-rounded button-icon" aria-hidden="true">add</span> Add item</button>
     </div>
     {{ item_formset.management_form }}
     {% if item_formset.non_form_errors %}<p class="mb-3 text-sm text-[#e10600]">{{ item_formset.non_form_errors }}</p>{% endif %}
@@ -63,8 +63,8 @@
   </section>
 
   <div class="flex flex-wrap gap-3 border-t border-black/10 pt-5">
-    <button class="primary-button" type="submit">Save document</button>
-    <a class="secondary-button" href="{% url 'documents:list' %}">Cancel</a>
+    <button class="primary-button" type="submit"><span class="material-symbols-rounded button-icon" aria-hidden="true">save</span> Save document</button>
+    <a class="secondary-button" href="{% url 'documents:list' %}"><span class="material-symbols-rounded button-icon" aria-hidden="true">close</span> Cancel</a>
   </div>
 </form>
 <template id="empty-item-row">
