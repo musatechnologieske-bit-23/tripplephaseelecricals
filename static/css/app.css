@@ -67,6 +67,14 @@ form input[type="file"] { max-width: 100%; min-height: auto; border: 1px dashed 
 form input:focus, form textarea:focus, form select:focus { border-color: #5873ff; outline: none; box-shadow: 0 0 0 3px rgb(10 46 255 / 11%); }
 form input[type="checkbox"], form input[type="radio"] { width: 18px; height: 18px; accent-color: var(--blue); }
 .vat-toggle, .item-row input[type="checkbox"] { accent-color: var(--blue); }
+.item-row textarea { min-height: 64px; resize: vertical; }
+.item-row-actions { display: flex; justify-content: flex-end; gap: 5px; }
+.item-row-action { display: inline-grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #596579; cursor: pointer; }
+.item-row-action:hover { border-color: #b8c5ff; background: #f3f5ff; color: var(--blue); }
+.item-row-action .material-symbols-rounded { font-size: 19px; }
+.delete-item-row { position: relative; }
+.item-row .item-delete-checkbox { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.delete-item-row:focus-within { outline: 2px solid #5873ff; outline-offset: 2px; }
 
 .primary-button, .secondary-button {
   display: inline-flex;

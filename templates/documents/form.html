@@ -40,7 +40,7 @@
     {% if item_formset.non_form_errors %}<p class="mb-3 text-sm text-[#e10600]">{{ item_formset.non_form_errors }}</p>{% endif %}
     <div class="overflow-x-auto">
       <table id="item-table" class="w-full min-w-[680px] border-collapse text-left text-sm" data-vat-rate="{{ company.vat_rate }}">
-        <thead><tr class="border-b border-black/10 text-xs uppercase text-neutral-500"><th class="py-3 pr-3">Description</th><th class="w-28 py-3 pr-3">Quantity</th><th class="w-40 py-3 pr-3">Unit price</th><th class="w-36 py-3 pr-3 text-right">Line total</th><th class="w-24 py-3 text-right">Remove</th></tr></thead>
+        <thead><tr class="border-b border-black/10 text-xs uppercase text-neutral-500"><th class="py-3 pr-3">Description</th><th class="w-28 py-3 pr-3">Quantity</th><th class="w-40 py-3 pr-3">Unit price</th><th class="w-36 py-3 pr-3 text-right">Line total</th><th class="w-24 py-3 text-right">Actions</th></tr></thead>
         <tbody id="item-rows">
           {% for item_form in item_formset %}
           <tr class="item-row border-b border-black/5 align-top" {% if item_form.DELETE.value %}hidden{% endif %}>
@@ -48,7 +48,14 @@
             <td class="py-3 pr-3">{{ item_form.quantity }}{% for error in item_form.quantity.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}</td>
             <td class="py-3 pr-3">{{ item_form.unit_price }}{% for error in item_form.unit_price.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}</td>
             <td class="line-total py-3 pr-3 text-right tabular-nums">0.00</td>
-            <td class="py-3 text-right">{{ item_form.DELETE }}</td>
+            <td class="py-3 text-right">
+              <div class="item-row-actions">
+                <button class="item-row-action add-item-row" type="button" aria-label="Add item below" title="Add item below"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+                <label class="item-row-action delete-item-row" for="{{ item_form.DELETE.id_for_label }}" title="Remove item">
+                  {{ item_form.DELETE }}<span class="material-symbols-rounded" aria-hidden="true">delete</span>
+                </label>
+              </div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -73,7 +80,14 @@
     <td class="py-3 pr-3">{{ item_formset.empty_form.quantity }}</td>
     <td class="py-3 pr-3">{{ item_formset.empty_form.unit_price }}</td>
     <td class="line-total py-3 pr-3 text-right tabular-nums">0.00</td>
-    <td class="py-3 text-right">{{ item_formset.empty_form.DELETE }}</td>
+    <td class="py-3 text-right">
+      <div class="item-row-actions">
+        <button class="item-row-action add-item-row" type="button" aria-label="Add item below" title="Add item below"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
+        <label class="item-row-action delete-item-row" for="{{ item_formset.empty_form.DELETE.id_for_label }}" title="Remove item">
+          {{ item_formset.empty_form.DELETE }}<span class="material-symbols-rounded" aria-hidden="true">delete</span>
+        </label>
+      </div>
+    </td>
   </tr>
 </template>
 <script src="{% static 'js/documents.js' %}" defer></script>

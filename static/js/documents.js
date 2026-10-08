@@ -28,6 +28,18 @@
     document.querySelector("#total-preview").textContent = money(subtotalCents + vatCents);
   }
 
+  function addItemRow(afterRow = null) {
+    const formIndex = Number(totalForms.value);
+    const newRow = template.innerHTML.replaceAll("__prefix__", formIndex);
+    if (afterRow) {
+      afterRow.insertAdjacentHTML("afterend", newRow);
+    } else {
+      rows.insertAdjacentHTML("beforeend", newRow);
+    }
+    totalForms.value = formIndex + 1;
+    updateTotals();
+  }
+
   rows.addEventListener("input", updateTotals);
   rows.addEventListener("change", (event) => {
     if (event.target.matches('input[type="checkbox"]')) {
@@ -35,12 +47,11 @@
     }
     updateTotals();
   });
-  vatCheckbox.addEventListener("change", updateTotals);
-  document.querySelector("#add-item").addEventListener("click", () => {
-    const formIndex = Number(totalForms.value);
-    rows.insertAdjacentHTML("beforeend", template.innerHTML.replaceAll("__prefix__", formIndex));
-    totalForms.value = formIndex + 1;
-    updateTotals();
+  rows.addEventListener("click", (event) => {
+    const addButton = event.target.closest(".add-item-row");
+    if (addButton) addItemRow(addButton.closest(".item-row"));
   });
+  vatCheckbox.addEventListener("change", updateTotals);
+  document.querySelector("#add-item").addEventListener("click", () => addItemRow());
   updateTotals();
 })();

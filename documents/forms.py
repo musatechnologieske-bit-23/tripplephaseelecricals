@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import inlineformset_factory
+from django.forms import BaseInlineFormSet, inlineformset_factory
 
 from .models import Document, DocumentItem
 
@@ -58,16 +58,23 @@ class DocumentItemForm(forms.ModelForm):
         model = DocumentItem
         fields = ("description", "quantity", "unit_price")
         widgets = {
-            "description": forms.TextInput(attrs={"class": "item-input", "placeholder": "Description"}),
+            "description": forms.Textarea(attrs={"class": "item-input", "placeholder": "Description", "rows": 2}),
             "quantity": forms.NumberInput(attrs={"class": "item-input quantity-input", "min": "0.01", "step": "0.01"}),
             "unit_price": forms.NumberInput(attrs={"class": "item-input price-input", "min": "0", "step": "0.01"}),
         }
+
+
+class DocumentItemFormSetBase(BaseInlineFormSet):
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        form.fields["DELETE"].widget.attrs["class"] = "item-delete-checkbox"
 
 
 DocumentItemFormSet = inlineformset_factory(
     Document,
     DocumentItem,
     form=DocumentItemForm,
+    formset=DocumentItemFormSetBase,
     extra=1,
     can_delete=True,
     min_num=1,
