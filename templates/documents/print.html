@@ -13,11 +13,11 @@
       @bottom-right {
         color: #737373;
         content: "Page " counter(page) " of " counter(pages);
-        font: 8pt "DejaVu Sans", sans-serif;
+        font: 9pt "DejaVu Sans", sans-serif;
       }
     }
     * { box-sizing: border-box; }
-    body { margin: 0; color: #171717; font: 9pt/1.42 "DejaVu Sans", sans-serif; }
+    body { margin: 0; color: #171717; font: 10pt/1.42 "DejaVu Sans", sans-serif; }
     .toolbar { display: flex; justify-content: flex-end; gap: 8px; margin: 18px auto; max-width: 210mm; }
     .toolbar a, .toolbar button { border: 1px solid #bdbdbd; border-radius: 3px; background: #fff; color: #171717; cursor: pointer; font: inherit; padding: 8px 12px; text-decoration: none; }
     .toolbar .download { border-color: #e10600; background: #e10600; color: #fff; }
@@ -25,21 +25,21 @@
     .company-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; border-bottom: 2px solid #171717; padding-bottom: 13px; }
     .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
     .brand img { display: block; width: 154px; height: 68px; flex: 0 0 154px; background: #fff; object-fit: contain; }
-    .company-contact { margin-top: 4px; color: #555; font-size: 8pt; white-space: pre-line; }
+    .company-contact { margin-top: 4px; color: #555; font-size: 9pt; white-space: pre-line; }
     .document-heading { min-width: 132px; text-align: right; }
     .document-heading h1 { margin: 0; color: #e10600; font-size: 18pt; line-height: 1.1; }
-    .document-number { margin-top: 5px; font-size: 10pt; font-weight: 700; }
-    .kra { margin-top: 5px; color: #555; font-size: 8pt; }
+    .document-number { margin-top: 5px; font-size: 11pt; font-weight: 700; }
+    .kra { margin-top: 5px; color: #555; font-size: 9pt; }
     .metadata { display: flex; justify-content: space-between; gap: 20px; padding: 16px 0 12px; }
-    .eyebrow { margin: 0 0 5px; color: #737373; font-size: 7pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-    .client-name { margin: 0; font-size: 11pt; font-weight: 700; }
-    .client-details, .date-details { margin-top: 4px; color: #444; font-size: 8pt; white-space: pre-line; }
+    .eyebrow { margin: 0 0 5px; color: #737373; font-size: 8pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .client-name { margin: 0; font-size: 12pt; font-weight: 700; }
+    .client-details, .date-details { margin-top: 4px; color: #444; font-size: 9pt; white-space: pre-line; }
     .date-details { text-align: right; }
     table { width: 100%; border-collapse: collapse; }
     .items { margin-top: 6px; }
     .items thead { display: table-header-group; }
-    .items th { background: #f1f1ee; color: #444; font-size: 7pt; font-weight: 700; text-align: left; text-transform: uppercase; }
-    .items th, .items td { border-bottom: 1px solid #dededb; padding: 8px 7px; }
+    .items th { background: #f1f1ee; color: #444; font-size: 8pt; font-weight: 700; text-align: left; text-transform: uppercase; }
+    .items th, .items td { border-bottom: 1px solid #dededb; padding: 6px 7px; }
     .items tbody tr { break-inside: avoid; page-break-inside: avoid; }
     .items .number { text-align: right; white-space: nowrap; }
     .items td:first-child { overflow-wrap: anywhere; }
@@ -49,24 +49,24 @@
     .totals td { text-align: right; white-space: nowrap; }
     .totals .grand-total th, .totals .grand-total td { border-top: 1px solid #171717; padding-top: 8px; color: #171717; font-size: 12pt; font-weight: 800; }
     .notes { margin-top: 18px; border-top: 1px solid #dededb; padding-top: 11px; }
-    .notes h2 { margin: 0 0 4px; font-size: 8pt; }
-    .notes p { margin: 0; color: #444; font-size: 8pt; white-space: pre-line; overflow-wrap: anywhere; }
+    .notes h2 { margin: 0 0 4px; font-size: 9pt; }
+    .notes p { margin: 0; color: #444; font-size: 9pt; white-space: pre-line; overflow-wrap: anywhere; }
     .terms-block { margin-top: 14px; border-top: 1px solid #d9dce5; padding-top: 9px; }
-    .terms-block p { margin: 0; color: #344054; font-size: 8pt; line-height: 1.3; white-space: pre-line; }
+    .terms-block p { margin: 0; color: #344054; font-size: 9pt; line-height: 1.3; white-space: pre-line; }
     .details-table { margin-top: 10px; table-layout: fixed; break-inside: avoid; page-break-inside: avoid; }
-    .details-table th { border: 1px solid #aeb9d0; background: #0a2eff; color: #fff; font-size: 7.5pt; text-align: left; }
-    .details-table td { width: 33.333%; border: 1px solid #aeb9d0; color: #344054; font-size: 7.5pt; line-height: 1.3; overflow-wrap: anywhere; vertical-align: top; white-space: pre-line; }
+    .details-table th { border: 1px solid #aeb9d0; background: #0a2eff; color: #fff; font-size: 8.5pt; text-align: left; }
+    .details-table td { width: 33.333%; border: 1px solid #aeb9d0; color: #344054; font-size: 8.5pt; line-height: 1.3; overflow-wrap: anywhere; vertical-align: top; white-space: pre-line; }
     .details-table th, .details-table td { padding: 6px 7px; }
     .detail-heading { display: block; margin-bottom: 3px; color: #171717; font-weight: 700; }
     .signature-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-top: 14px; border-top: 1px solid #dededb; padding-top: 8px; break-inside: avoid; page-break-inside: avoid; }
     .signature-block { width: 180px; }
     .signature-name { display: block; margin: 0 0 -2px 8px; color: #0a2eff; font-family: "URW Chancery L", "DejaVu Serif", cursive; font-size: 22pt; font-style: italic; line-height: 1.15; transform: rotate(-5deg); transform-origin: left bottom; }
     .signature-line { display: block; border-bottom: 2px solid #171717; }
-    .signature-label { display: block; margin-top: 4px; color: #555; font-size: 8pt; }
-    .prepared-by { text-align: right; color: #555; font-size: 8pt; }
+    .signature-label { display: block; margin-top: 4px; color: #555; font-size: 9pt; }
+    .prepared-by { text-align: right; color: #555; font-size: 9pt; }
     .prepared-by p { margin: 0; }
     .prepared-by p + p { margin-top: 4px; }
-    .signature { margin-top: 12px; color: #555; font-size: 8pt; }
+    .signature { margin-top: 12px; color: #555; font-size: 9pt; }
     @media screen {
       body { min-height: 100vh; background: #e9e9e6; }
       .sheet { min-height: 297mm; }

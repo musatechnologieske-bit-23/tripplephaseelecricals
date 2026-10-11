@@ -227,6 +227,44 @@ class DocumentFormTests(TestCase):
 		self.assertEqual(document.total, Decimal("2320.00"))
 		self.assertEqual(document.items.count(), 1)
 
+	def test_create_form_without_vat_saves_subtotal_as_total(self):
+		response = self.client.post(
+			reverse("documents:create"),
+			{
+				"doc_type": "quotation",
+				"issue_date": "2026-09-28",
+				"valid_until": "",
+				"due_date": "",
+				"client_name": "Example Client",
+				"client_phone": "",
+				"client_email": "",
+				"client_address": "",
+				"client_pin": "",
+				"notes": "",
+				"items-TOTAL_FORMS": "1",
+				"items-INITIAL_FORMS": "0",
+				"items-MIN_NUM_FORMS": "1",
+				"items-MAX_NUM_FORMS": "1000",
+				"items-0-description": "Cable",
+				"items-0-quantity": "2.00",
+				"items-0-unit_price": "1000.00",
+				"items-0-id": "",
+			},
+		)
+
+		self.assertRedirects(response, reverse("documents:list"))
+		document = Document.objects.get()
+		self.assertFalse(document.apply_vat)
+		self.assertEqual(document.vat_amount, Decimal("0.00"))
+		self.assertEqual(document.total, document.subtotal)
+
+	def test_create_form_shows_optional_vat_control(self):
+		response = self.client.get(reverse("documents:create"))
+
+		self.assertContains(response, 'id="id_apply_vat"')
+		self.assertContains(response, "Apply VAT (16.00%)")
+		self.assertContains(response, "Untick to create this document without VAT.")
+
 	def test_create_invoice_form_saves_with_unpaid_status(self):
 		response = self.client.post(
 			reverse("documents:create"),
@@ -354,6 +392,16 @@ class DocumentPrintTests(TestCase):
 		self.assertContains(response, "Banking Details")
 		self.assertContains(response, "Payable To")
 		self.assertContains(response, "Jacinta")
+
+	def test_print_view_omits_vat_when_disabled(self):
+		self.document.apply_vat = False
+		self.document.save(update_fields=["apply_vat"])
+		self.document.recalculate_totals()
+
+		response = self.client.get(reverse("documents:print", args=(self.document.pk,)))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertNotContains(response, "VAT (16.00%)")
 
 	def test_pdf_download_returns_valid_pdf(self):
 		response = self.client.get(reverse("documents:pdf", args=(self.document.pk,)))

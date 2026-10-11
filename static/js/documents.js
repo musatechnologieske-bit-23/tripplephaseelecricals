@@ -25,6 +25,7 @@
     const vatCents = vatCheckbox.checked ? Math.round(subtotalCents * vatRate / 100) : 0;
     document.querySelector("#subtotal-preview").textContent = money(subtotalCents);
     document.querySelector("#vat-preview").textContent = money(vatCents);
+    document.querySelector("#vat-preview-row").hidden = !vatCheckbox.checked;
     document.querySelector("#total-preview").textContent = money(subtotalCents + vatCents);
   }
 
