@@ -9,6 +9,22 @@ from django.utils import timezone
 CENT = Decimal("0.01")
 
 
+class Customer(models.Model):
+	name = models.CharField(max_length=160)
+	phone = models.CharField(max_length=40, blank=True)
+	email = models.EmailField(blank=True)
+	address = models.TextField(blank=True)
+	pin = models.CharField(max_length=20, blank=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		ordering = ("name", "id")
+
+	def __str__(self):
+		return self.name
+
+
 class DocumentType(models.TextChoices):
 	QUOTATION = "quotation", "Quotation"
 	INVOICE = "invoice", "Invoice"
@@ -48,6 +64,9 @@ class Document(models.Model):
 	issue_date = models.DateField(default=timezone.localdate)
 	valid_until = models.DateField(null=True, blank=True)
 	due_date = models.DateField(null=True, blank=True)
+	customer = models.ForeignKey(
+		Customer, null=True, blank=True, on_delete=models.SET_NULL, related_name="documents"
+	)
 	client_name = models.CharField(max_length=160)
 	client_phone = models.CharField(max_length=40, blank=True)
 	client_email = models.EmailField(blank=True)

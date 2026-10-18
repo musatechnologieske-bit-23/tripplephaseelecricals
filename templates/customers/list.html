@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+{% block page_title %}Customers{% endblock %}
+{% block content %}
+<div class="register-toolbar mb-6 flex flex-wrap items-center justify-between gap-4">
+  <p class="text-sm text-neutral-600">Manage saved customer contact details for documents.</p>
+  <a class="primary-button" href="{% url 'documents:customer-create' %}"><span class="material-symbols-rounded button-icon" aria-hidden="true">add</span> Add customer</a>
+</div>
+<form class="register-filters mb-5 grid gap-3 sm:grid-cols-[minmax(180px,1fr)_auto_auto]" method="get">
+  <input type="search" name="q" value="{{ search }}" placeholder="Search customers" aria-label="Search customers">
+  <button class="secondary-button" type="submit"><span class="material-symbols-rounded button-icon" aria-hidden="true">search</span> Search</button>
+  <a class="secondary-button" href="{% url 'documents:customers' %}"><span class="material-symbols-rounded button-icon" aria-hidden="true">restart_alt</span> Reset</a>
+</form>
+{% if customers %}
+<div class="register-table overflow-x-auto">
+  <table class="w-full min-w-[650px] border-collapse text-left text-sm">
+    <thead><tr class="border-b border-black/10 text-xs uppercase text-neutral-500"><th class="py-3 pr-4">Customer</th><th class="py-3 pr-4">Phone</th><th class="py-3 pr-4">Email</th><th class="py-3 pr-4">KRA PIN</th><th class="py-3 text-right">Actions</th></tr></thead>
+    <tbody>
+      {% for customer in customers %}
+      <tr class="transaction-row border-b border-black/5 last:border-0">
+        <td class="py-4 pr-4 font-semibold">{{ customer.name }}</td>
+        <td class="py-4 pr-4">{{ customer.phone|default:"—" }}</td>
+        <td class="py-4 pr-4">{{ customer.email|default:"—" }}</td>
+        <td class="py-4 pr-4">{{ customer.pin|default:"—" }}</td>
+        <td class="py-4 text-right"><a href="{% url 'documents:customer-edit' customer.pk %}"><span class="material-symbols-rounded" aria-hidden="true">edit</span> Edit</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="mt-5 flex items-center justify-between gap-4 text-sm text-neutral-600">
+  <span>{{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</span>
+  <div class="flex gap-2">
+    {% if page_obj.has_previous %}<a class="secondary-button" href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">Previous</a>{% endif %}
+    {% if page_obj.has_next %}<a class="secondary-button" href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}">Next</a>{% endif %}
+  </div>
+</div>
+{% endif %}
+{% else %}
+<div class="empty-register border-y border-black/10 py-12 text-center">
+  <span class="empty-register-mark" aria-hidden="true"><span class="material-symbols-rounded">group_off</span></span>
+  <h2 class="text-lg font-bold">No customers found</h2>
+  <p class="mt-2 text-sm text-neutral-600">{% if search %}Try another search, or add a new customer.{% else %}Add a saved customer to select them on quotations and invoices.{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

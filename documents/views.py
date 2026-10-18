@@ -17,8 +17,8 @@ from weasyprint import HTML
 
 from core.models import CompanySettings
 
-from .forms import DocumentForm, DocumentItemFormSet
-from .models import Document, DocumentItem, DocumentType
+from .forms import CustomerForm, DocumentForm, DocumentItemFormSet
+from .models import Customer, Document, DocumentItem, DocumentType
 
 
 def _logo_data_uri():
@@ -123,7 +123,50 @@ def document_form(request, pk=None):
 			"item_formset": item_formset,
 			"company": company,
 			"document": document,
+			"customers": list(
+				Customer.objects.values("id", "name", "phone", "email", "address", "pin")
+			),
 		},
+	)
+
+
+@login_required
+def customer_list(request):
+	search = request.GET.get("q", "").strip()
+	customers = Customer.objects.all()
+	if search:
+		customers = customers.filter(
+			Q(name__icontains=search)
+			| Q(phone__icontains=search)
+			| Q(email__icontains=search)
+		)
+	page_obj = Paginator(customers, 20).get_page(request.GET.get("page"))
+	query_params = request.GET.copy()
+	query_params.pop("page", None)
+	return render(
+		request,
+		"customers/list.html",
+		{
+			"customers": page_obj.object_list,
+			"page_obj": page_obj,
+			"search": search,
+			"query_params": query_params.urlencode(),
+		},
+	)
+
+
+@login_required
+def customer_form(request, pk=None):
+	customer = get_object_or_404(Customer, pk=pk) if pk is not None else None
+	form = CustomerForm(request.POST or None, instance=customer)
+	if request.method == "POST" and form.is_valid():
+		saved_customer = form.save()
+		messages.success(request, f"{saved_customer.name} saved.")
+		return redirect("documents:customers")
+	return render(
+		request,
+		"customers/form.html",
+		{"form": form, "customer": customer},
 	)
 
 
@@ -145,6 +188,7 @@ def document_duplicate(request, pk):
 		issue_date=timezone.localdate(),
 		valid_until=source.valid_until,
 		due_date=source.due_date,
+		customer=source.customer,
 		client_name=source.client_name,
 		client_phone=source.client_phone,
 		client_email=source.client_email,
@@ -185,6 +229,7 @@ def document_convert(request, pk):
 		doc_type=DocumentType.INVOICE,
 		issue_date=timezone.localdate(),
 		due_date=quotation.valid_until or (timezone.localdate() + timedelta(days=14)),
+		customer=quotation.customer,
 		client_name=quotation.client_name,
 		client_phone=quotation.client_phone,
 		client_email=quotation.client_email,

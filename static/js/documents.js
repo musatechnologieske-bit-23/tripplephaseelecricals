@@ -1,4 +1,26 @@
 (() => {
+  const customerSelect = document.querySelector("#id_customer");
+  const customerData = document.querySelector("#customer-data");
+  if (customerSelect && customerData) {
+    const customers = JSON.parse(customerData.textContent);
+    const clientFields = {
+      name: "#id_client_name",
+      phone: "#id_client_phone",
+      email: "#id_client_email",
+      address: "#id_client_address",
+      pin: "#id_client_pin",
+    };
+
+    customerSelect.addEventListener("change", () => {
+      const customer = customers.find((entry) => String(entry.id) === customerSelect.value);
+      if (!customer) return;
+      Object.entries(clientFields).forEach(([key, selector]) => {
+        const field = document.querySelector(selector);
+        if (field) field.value = customer[key] || "";
+      });
+    });
+  }
+
   const table = document.querySelector("#item-table");
   if (!table) return;
 

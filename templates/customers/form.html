@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{% if customer %}Edit {{ customer.name }}{% else %}Add customer{% endif %}{% endblock %}
+{% block page_title %}{% if customer %}Edit customer{% else %}Add customer{% endif %}{% endblock %}
+{% block content %}
+<form method="post" class="max-w-3xl">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="mb-5 text-sm text-[#e10600]">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+    {% for field in form %}
+      <div class="{% if field.name == 'address' %}sm:col-span-2{% endif %}">
+        <label class="field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="mt-1 text-xs text-[#e10600]">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="mt-8 flex items-center gap-3 border-t border-black/10 pt-5">
+    <button class="primary-button" type="submit"><span class="material-symbols-rounded button-icon" aria-hidden="true">save</span> Save customer</button>
+    <a class="secondary-button" href="{% url 'documents:customers' %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -8,7 +8,7 @@ from weasyprint import HTML
 
 from core.models import CompanySettings
 
-from .models import Document, DocumentItem, DocumentType
+from .models import Customer, Document, DocumentItem, DocumentType
 from .views import _print_context
 
 
@@ -85,6 +85,9 @@ class DocumentModelTests(TestCase):
 
 	def test_duplicate_document_copies_items_and_creates_new_number(self):
 		quotation = self.make_document(doc_type=DocumentType.QUOTATION)
+		customer = Customer.objects.create(name="Saved Client")
+		quotation.customer = customer
+		quotation.save(update_fields=["customer"])
 		DocumentItem.objects.create(
 			document=quotation,
 			description="Cable",
@@ -100,11 +103,15 @@ class DocumentModelTests(TestCase):
 		self.assertNotEqual(duplicate.pk, quotation.pk)
 		self.assertEqual(duplicate.number, "QT-0002")
 		self.assertEqual(duplicate.client_name, quotation.client_name)
+		self.assertEqual(duplicate.customer, customer)
 		self.assertEqual(duplicate.items.count(), 1)
 		self.assertEqual(duplicate.items.first().description, "Cable")
 
 	def test_convert_quotation_to_invoice_links_original_document(self):
 		quotation = self.make_document(doc_type=DocumentType.QUOTATION)
+		customer = Customer.objects.create(name="Saved Client")
+		quotation.customer = customer
+		quotation.save(update_fields=["customer"])
 		DocumentItem.objects.create(
 			document=quotation,
 			description="Lighting circuit",
@@ -121,6 +128,7 @@ class DocumentModelTests(TestCase):
 		self.assertEqual(converted.doc_type, DocumentType.INVOICE)
 		self.assertEqual(converted.status, Document.Status.UNPAID)
 		self.assertEqual(converted.converted_from, quotation)
+		self.assertEqual(converted.customer, customer)
 		self.assertEqual(quotation.status, Document.Status.CONVERTED)
 
 	def test_mark_invoice_paid_records_payment(self):
@@ -226,6 +234,58 @@ class DocumentFormTests(TestCase):
 		self.assertEqual(document.vat_amount, Decimal("320.00"))
 		self.assertEqual(document.total, Decimal("2320.00"))
 		self.assertEqual(document.items.count(), 1)
+		self.assertIsNone(document.customer)
+
+	def test_create_form_can_select_saved_customer(self):
+		customer = Customer.objects.create(
+			name="Saved Electrical Client",
+			phone="0712345678",
+			email="client@example.com",
+			address="Nairobi",
+			pin="P123456789A",
+		)
+		response = self.client.post(
+			reverse("documents:create"),
+			{
+				"doc_type": "quotation",
+				"issue_date": "2026-09-28",
+				"valid_until": "",
+				"due_date": "",
+				"customer": str(customer.pk),
+				"client_name": customer.name,
+				"client_phone": customer.phone,
+				"client_email": customer.email,
+				"client_address": customer.address,
+				"client_pin": customer.pin,
+				"notes": "",
+				"payment_terms": "cash",
+				"apply_vat": "on",
+				"items-TOTAL_FORMS": "1",
+				"items-INITIAL_FORMS": "0",
+				"items-MIN_NUM_FORMS": "1",
+				"items-MAX_NUM_FORMS": "1000",
+				"items-0-description": "Cable",
+				"items-0-quantity": "1.00",
+				"items-0-unit_price": "100.00",
+				"items-0-id": "",
+			},
+		)
+
+		self.assertRedirects(response, reverse("documents:list"))
+		document = Document.objects.get()
+		self.assertEqual(document.customer, customer)
+		self.assertEqual(document.client_name, customer.name)
+		self.assertEqual(document.client_phone, customer.phone)
+		self.assertEqual(document.client_address, customer.address)
+
+	def test_create_form_offers_saved_customers_and_manual_entry(self):
+		Customer.objects.create(name="Saved Electrical Client")
+
+		response = self.client.get(reverse("documents:create"))
+
+		self.assertContains(response, 'id="id_customer"')
+		self.assertContains(response, "Saved Electrical Client")
+		self.assertContains(response, "Or enter the client details manually below.")
 
 	def test_create_form_without_vat_saves_subtotal_as_total(self):
 		response = self.client.post(
@@ -353,6 +413,52 @@ class DocumentRegisterTests(TestCase):
 		self.assertTrue(first_page.context["page_obj"].has_next())
 		self.assertEqual(search_result.context["page_obj"].paginator.count, 1)
 		self.assertContains(search_result, "Client 20")
+
+
+class CustomerManagementTests(TestCase):
+	def setUp(self):
+		self.user = get_user_model().objects.create_user(
+			username="customers", password="test-password"
+		)
+		self.client.force_login(self.user)
+
+	def test_customer_can_be_added_and_updated(self):
+		response = self.client.post(
+			reverse("documents:customer-create"),
+			{
+				"name": "Example Customer",
+				"phone": "0712345678",
+				"email": "customer@example.com",
+				"address": "Nairobi",
+				"pin": "P123456789A",
+			},
+		)
+
+		customer = Customer.objects.get()
+		self.assertRedirects(response, reverse("documents:customers"))
+		self.assertContains(self.client.get(reverse("documents:customers")), "Example Customer")
+
+		response = self.client.post(
+			reverse("documents:customer-edit", args=(customer.pk,)),
+			{
+				"name": "Updated Customer",
+				"phone": customer.phone,
+				"email": customer.email,
+				"address": customer.address,
+				"pin": customer.pin,
+			},
+		)
+
+		self.assertRedirects(response, reverse("documents:customers"))
+		customer.refresh_from_db()
+		self.assertEqual(customer.name, "Updated Customer")
+
+	def test_customer_pages_require_login(self):
+		self.client.logout()
+
+		response = self.client.get(reverse("documents:customers"))
+
+		self.assertRedirects(response, f"{reverse('login')}?next={reverse('documents:customers')}")
 
 
 class DocumentPrintTests(TestCase):

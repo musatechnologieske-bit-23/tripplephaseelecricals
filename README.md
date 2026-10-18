@@ -1,6 +1,6 @@
 # Tripple Phase Electricals
 
-A Django application for creating, printing, and reporting on quotations and invoices for Tripple Phase Electricals Limited. Documents are entered directly; the app does not maintain a customer or product catalog.
+A Django application for creating, printing, and reporting on quotations and invoices for Tripple Phase Electricals Limited. Save customer contact details for reuse or enter client details directly on each document.
 
 ## Requirements
 
@@ -30,6 +30,8 @@ python manage.py runserver
 ```
 
 Open `http://127.0.0.1:8000/` and sign in. Company contact, payment, VAT, and terms details can be edited under Company settings.
+
+Use Customers in the sidebar to add and update saved customer details. When creating a quotation or invoice, choose a saved customer to fill in their contact details, or leave the selector blank and enter the client details manually.
 
 ## Tests
 
@@ -69,5 +71,6 @@ Production settings require `MYSQL_URL` or all `DB_*` connection values and a co
 - `/documents/?type=quotation` - quotations
 - `/documents/?type=sales` - paid invoice transactions
 - `/documents/?type=invoice` - invoices
+- `/documents/customers/` - saved customers
 - `/admin/` - Django administration
 - `/health/` - deployment health check

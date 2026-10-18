@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from .models import Document, DocumentItem
+from .models import Customer, Document, DocumentItem
 
 
 class DocumentForm(forms.ModelForm):
@@ -19,6 +19,7 @@ class DocumentForm(forms.ModelForm):
             "issue_date",
             "valid_until",
             "due_date",
+            "customer",
             "client_name",
             "client_phone",
             "client_email",
@@ -33,6 +34,7 @@ class DocumentForm(forms.ModelForm):
             "issue_date": forms.DateInput(attrs={"type": "date", "class": "field-input"}),
             "valid_until": forms.DateInput(attrs={"type": "date", "class": "field-input"}),
             "due_date": forms.DateInput(attrs={"type": "date", "class": "field-input"}),
+            "customer": forms.Select(attrs={"class": "field-input"}),
             "client_name": forms.TextInput(attrs={"class": "field-input", "autocomplete": "organization"}),
             "client_phone": forms.TextInput(attrs={"class": "field-input", "autocomplete": "tel"}),
             "client_email": forms.EmailInput(attrs={"class": "field-input", "autocomplete": "email"}),
@@ -51,6 +53,20 @@ class DocumentForm(forms.ModelForm):
             "payment_terms": "Payment term",
             "apply_vat": "Apply VAT",
         }
+
+
+class CustomerForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ("name", "phone", "email", "address", "pin")
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "field-input", "autocomplete": "organization"}),
+            "phone": forms.TextInput(attrs={"class": "field-input", "autocomplete": "tel"}),
+            "email": forms.EmailInput(attrs={"class": "field-input", "autocomplete": "email"}),
+            "address": forms.Textarea(attrs={"class": "field-input", "rows": 3}),
+            "pin": forms.TextInput(attrs={"class": "field-input"}),
+        }
+        labels = {"pin": "Customer KRA PIN"}
 
 
 class DocumentItemForm(forms.ModelForm):
