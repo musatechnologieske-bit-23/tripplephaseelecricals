@@ -1,4 +1,5 @@
 import base64
+import logging
 import mimetypes
 from datetime import timedelta
 from pathlib import Path
@@ -13,12 +14,13 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date
-from weasyprint import HTML
-
 from core.models import CompanySettings
 
 from .forms import CustomerForm, DocumentForm, DocumentItemFormSet
 from .models import Customer, Document, DocumentItem, DocumentType
+
+
+logger = logging.getLogger(__name__)
 
 
 def _logo_data_uri():
@@ -281,6 +283,18 @@ def document_mark_paid(request, pk):
 
 @login_required
 def document_pdf(request, pk):
+	try:
+		from weasyprint import HTML
+	except OSError:
+		logger.exception("WeasyPrint system libraries are unavailable.")
+		return HttpResponse(
+			"PDF generation is unavailable because this deployment is missing "
+			"WeasyPrint system libraries. Open the print view and use your "
+			"browser's print-to-PDF option.",
+			status=503,
+			content_type="text/plain",
+		)
+
 	document = get_object_or_404(Document.objects.prefetch_related("items"), pk=pk)
 	context = _print_context(document)
 	html = render(request, "documents/print.html", {**context, "pdf_mode": True})

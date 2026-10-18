@@ -1,5 +1,8 @@
 venv/
 .env
+.env.local
+.env.*.local
+.vercel/
 staticfiles/
 media/
 __pycache__/

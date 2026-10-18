@@ -41,6 +41,58 @@ Run the Django test suite with the project's virtual environment active:
 python manage.py test
 ```
 
+## Vercel deployment
+
+This project can run on Vercel's Python runtime. The Vercel configuration sets
+Python 3.12 and a 60-second function duration; Vercel automatically detects the
+Django WSGI application and serves collected static files from its CDN.
+
+Vercel does not provide persistent MySQL storage for this app. Create a separate
+MySQL database that allows remote connections, and use its connection URL as
+`MYSQL_URL`. Do not use local SQLite on Vercel: the function filesystem is not
+persistent and does not provide shared database storage. Uploaded media files
+are also not persistent there.
+
+**Vercel's free Hobby plan is for personal, non-commercial use only.** This is a
+company quotation and invoice system, so use Hobby only for personal evaluation;
+company production use requires a plan whose terms permit commercial use.
+See [Vercel's Hobby plan terms](https://vercel.com/docs/plans/hobby#hobby-billing-cycle).
+
+1. Import the Git repository into Vercel and leave the Django framework preset,
+   build command, and output directory at their detected defaults.
+2. Add these project environment variables for Production (and Preview if
+   needed):
+
+   ```text
+   DJANGO_ENV=production
+   DJANGO_DEBUG=False
+   DJANGO_SECRET_KEY=<a-long-random-secret>
+   MYSQL_URL=<your-external-mysql-connection-url>
+   ```
+
+   Vercel supplies `VERCEL_URL` and the project domain automatically; Django
+   uses those for allowed hosts and CSRF origins. Add any custom domains to
+   `DJANGO_ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` as needed.
+3. Deploy the project. Before first use, link the Vercel project locally, pull
+   its environment variables, and apply the database migrations:
+
+   ```bash
+   npx vercel link
+   npx vercel env pull .env.local
+   venv/bin/python manage.py migrate
+   venv/bin/python manage.py createsuperuser
+   ```
+
+   `.env.local` is ignored by Git. Do not commit it or put credentials in the
+   repository.
+4. Confirm `/health/` returns `OK`, then sign in to the deployed application.
+
+WeasyPrint requires native Pango and Cairo libraries that may not be available
+in Vercel's Python runtime. If they are missing, PDF download returns an explicit
+503 response; use the document print view and the browser's print-to-PDF feature.
+Uploaded files are ephemeral on Vercel, so keep the company logo in the bundled
+`static/` directory unless persistent object storage is configured.
+
 ## Railway deployment
 
 The included `railway.json` runs static collection, database migrations, and Gunicorn at Railway's `$PORT`. It also configures `/health/` as the deployment health check.

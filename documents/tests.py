@@ -1,4 +1,6 @@
+import builtins
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -516,6 +518,22 @@ class DocumentPrintTests(TestCase):
 		self.assertEqual(response["Content-Type"], "application/pdf")
 		self.assertIn("attachment; filename=", response["Content-Disposition"])
 		self.assertTrue(response.content.startswith(b"%PDF-"))
+
+	def test_pdf_download_reports_missing_native_dependencies(self):
+		original_import = builtins.__import__
+		pdf_url = reverse("documents:pdf", args=(self.document.pk,))
+
+		def fail_weasyprint_import(name, *args, **kwargs):
+			if name == "weasyprint":
+				raise OSError("Missing native library")
+			return original_import(name, *args, **kwargs)
+
+		with self.assertLogs("documents.views", level="ERROR"):
+			with patch("builtins.__import__", side_effect=fail_weasyprint_import):
+				response = self.client.get(pdf_url)
+
+		self.assertEqual(response.status_code, 503)
+		self.assertContains(response, "browser's print-to-PDF option", status_code=503)
 
 	def test_typical_document_fits_one_page(self):
 		self.assertEqual(len(self.render_pdf_pages()), 1)

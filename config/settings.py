@@ -6,11 +6,14 @@ from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env.local")
 load_dotenv(BASE_DIR / ".env")
 
+vercel_deployment = os.environ.get("VERCEL", "").lower() in {"1", "true"}
 production = (
     os.environ.get("DJANGO_ENV", "").lower() == "production"
     or bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+    or vercel_deployment
 )
 
 
@@ -34,6 +37,14 @@ allowed_hosts = [
 railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
 if railway_domain and railway_domain not in allowed_hosts:
     allowed_hosts.append(railway_domain)
+vercel_domains = (
+    os.environ.get("VERCEL_URL", "").strip(),
+    os.environ.get("VERCEL_BRANCH_URL", "").strip(),
+    os.environ.get("VERCEL_PROJECT_PRODUCTION_URL", "").strip(),
+)
+for vercel_domain in vercel_domains:
+    if vercel_domain and vercel_domain not in allowed_hosts:
+        allowed_hosts.append(vercel_domain)
 ALLOWED_HOSTS = allowed_hosts
 
 csrf_origins = [
@@ -45,6 +56,11 @@ if railway_domain:
     railway_origin = f"https://{railway_domain}"
     if railway_origin not in csrf_origins:
         csrf_origins.append(railway_origin)
+for vercel_domain in vercel_domains:
+    if vercel_domain:
+        vercel_origin = f"https://{vercel_domain}"
+        if vercel_origin not in csrf_origins:
+            csrf_origins.append(vercel_origin)
 CSRF_TRUSTED_ORIGINS = csrf_origins
 
 INSTALLED_APPS = [
