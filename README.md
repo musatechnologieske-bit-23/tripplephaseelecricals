@@ -88,8 +88,11 @@ See [Vercel's Hobby plan terms](https://vercel.com/docs/plans/hobby#hobby-billin
 4. Confirm `/health/` returns `OK`, then sign in to the deployed application.
 
 WeasyPrint requires native Pango and Cairo libraries that may not be available
-in Vercel's Python runtime. If they are missing, PDF download returns an explicit
-503 response; use the document print view and the browser's print-to-PDF feature.
+in Vercel's Python runtime. When those libraries are missing, PDF downloads use
+the ReportLab fallback included with the app, so the existing **Download PDF**
+button still returns a PDF attachment. On deployments with the WeasyPrint
+libraries, WeasyPrint remains the primary renderer. The print view and browser
+print-to-PDF option are also available.
 Uploaded files are ephemeral on Vercel, so keep the company logo in the bundled
 `static/` directory unless persistent object storage is configured.
 

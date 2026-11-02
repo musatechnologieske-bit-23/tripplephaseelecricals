@@ -1,4 +1,5 @@
 import builtins
+import re
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -519,9 +520,16 @@ class DocumentPrintTests(TestCase):
 		self.assertIn("attachment; filename=", response["Content-Disposition"])
 		self.assertTrue(response.content.startswith(b"%PDF-"))
 
-	def test_pdf_download_reports_missing_native_dependencies(self):
+	def test_pdf_download_falls_back_when_native_dependencies_are_missing(self):
 		original_import = builtins.__import__
 		pdf_url = reverse("documents:pdf", args=(self.document.pk,))
+		for item_number in range(90):
+			DocumentItem.objects.create(
+				document=self.document,
+				description=f"Electrical supply item {item_number:03d}",
+				quantity=Decimal("2.00"),
+				unit_price=Decimal("1250.00"),
+			)
 
 		def fail_weasyprint_import(name, *args, **kwargs):
 			if name == "weasyprint":
@@ -532,8 +540,13 @@ class DocumentPrintTests(TestCase):
 			with patch("builtins.__import__", side_effect=fail_weasyprint_import):
 				response = self.client.get(pdf_url)
 
-		self.assertEqual(response.status_code, 503)
-		self.assertContains(response, "browser's print-to-PDF option", status_code=503)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response["Content-Type"], "application/pdf")
+		self.assertIn("attachment; filename=", response["Content-Disposition"])
+		self.assertTrue(response.content.startswith(b"%PDF-"))
+		page_count = len(re.findall(rb"/Type\s*/Page\b", response.content))
+		self.assertGreater(page_count, 1)
+		self.assertLessEqual(page_count, 4)
 
 	def test_typical_document_fits_one_page(self):
 		self.assertEqual(len(self.render_pdf_pages()), 1)

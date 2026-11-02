@@ -283,22 +283,31 @@ def document_mark_paid(request, pk):
 
 @login_required
 def document_pdf(request, pk):
+	document = get_object_or_404(Document.objects.prefetch_related("items"), pk=pk)
+	company = CompanySettings.load()
 	try:
 		from weasyprint import HTML
-	except OSError:
+	except (ImportError, OSError):
 		logger.exception("WeasyPrint system libraries are unavailable.")
-		return HttpResponse(
-			"PDF generation is unavailable because this deployment is missing "
-			"WeasyPrint system libraries. Open the print view and use your "
-			"browser's print-to-PDF option.",
-			status=503,
-			content_type="text/plain",
-		)
+		pdf = _reportlab_pdf(document, company)
+	else:
+		context = _print_context(document)
+		html = render(request, "documents/print.html", {**context, "pdf_mode": True})
+		try:
+			pdf = HTML(
+				string=html.content.decode("utf-8"),
+				base_url=request.build_absolute_uri("/"),
+			).write_pdf()
+		except OSError:
+			logger.exception("WeasyPrint failed to load a required system library.")
+			pdf = _reportlab_pdf(document, company)
 
-	document = get_object_or_404(Document.objects.prefetch_related("items"), pk=pk)
-	context = _print_context(document)
-	html = render(request, "documents/print.html", {**context, "pdf_mode": True})
-	pdf = HTML(string=html.content.decode("utf-8"), base_url=request.build_absolute_uri("/")).write_pdf()
 	response = HttpResponse(pdf, content_type="application/pdf")
 	response["Content-Disposition"] = f'attachment; filename="{document.number}.pdf"'
 	return response
+
+
+def _reportlab_pdf(document, company):
+	from .pdf import render_document_pdf
+
+	return render_document_pdf(document, company)
