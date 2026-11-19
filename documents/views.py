@@ -12,8 +12,10 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_POST
 from core.models import CompanySettings
 
 from .forms import CustomerForm, DocumentForm, DocumentItemFormSet
@@ -177,6 +179,19 @@ def document_print(request, pk):
 	document = get_object_or_404(Document.objects.prefetch_related("items"), pk=pk)
 	context = _print_context(document)
 	return render(request, "documents/print.html", {**context, "pdf_mode": False})
+
+
+@login_required
+@require_POST
+def document_delete(request, pk):
+	document = get_object_or_404(Document, pk=pk)
+	if document.doc_type != DocumentType.QUOTATION:
+		return HttpResponseForbidden("Only quotations can be deleted here.")
+
+	number = document.number
+	document.delete()
+	messages.success(request, f"{number} deleted.")
+	return redirect(f"{reverse('documents:list')}?type=quotation")
 
 
 @login_required

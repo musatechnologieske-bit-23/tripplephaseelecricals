@@ -41,6 +41,35 @@ class DocumentModelTests(TestCase):
 		self.assertEqual(next_quotation.number, "QT-0002")
 		self.assertEqual(invoice.status, Document.Status.UNPAID)
 
+	def test_quotation_register_has_direct_pdf_download_and_delete_actions(self):
+		quotation = self.make_document()
+
+		response = self.client.get(reverse("documents:list"), {"type": "quotation"})
+
+		self.assertContains(response, reverse("documents:pdf", args=(quotation.pk,)))
+		self.assertContains(response, reverse("documents:delete", args=(quotation.pk,)))
+		self.assertContains(response, f'download="{quotation.number}.pdf"')
+
+	def test_only_post_can_delete_quotations(self):
+		quotation = self.make_document()
+
+		get_response = self.client.get(reverse("documents:delete", args=(quotation.pk,)))
+		self.assertEqual(get_response.status_code, 405)
+		self.assertTrue(Document.objects.filter(pk=quotation.pk).exists())
+
+		response = self.client.post(reverse("documents:delete", args=(quotation.pk,)))
+
+		self.assertRedirects(response, f"{reverse('documents:list')}?type=quotation")
+		self.assertFalse(Document.objects.filter(pk=quotation.pk).exists())
+
+	def test_delete_endpoint_rejects_invoices(self):
+		invoice = self.make_document(DocumentType.INVOICE)
+
+		response = self.client.post(reverse("documents:delete", args=(invoice.pk,)))
+
+		self.assertEqual(response.status_code, 403)
+		self.assertTrue(Document.objects.filter(pk=invoice.pk).exists())
+
 	def test_vat_example_and_half_up_rounding(self):
 		quotation = self.make_document()
 		DocumentItem.objects.create(

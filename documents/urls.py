@@ -12,6 +12,7 @@ urlpatterns = [
     path("customers/<int:pk>/edit/", views.customer_form, name="customer-edit"),
     path("<int:pk>/print/", views.document_print, name="print"),
     path("<int:pk>/pdf/", views.document_pdf, name="pdf"),
+    path("<int:pk>/delete/", views.document_delete, name="delete"),
     path("<int:pk>/duplicate/", views.document_duplicate, name="duplicate"),
     path("<int:pk>/convert/", views.document_convert, name="convert"),
     path("<int:pk>/mark-paid/", views.document_mark_paid, name="mark-paid"),

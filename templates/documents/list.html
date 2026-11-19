@@ -40,9 +40,11 @@
         <td class="py-4 text-right">
           <div class="flex flex-wrap justify-end gap-3">
             <a href="{% url 'documents:print' document.pk %}"><span class="material-symbols-rounded" aria-hidden="true">visibility</span> View</a>
+            <a href="{% url 'documents:pdf' document.pk %}" download="{{ document.number }}.pdf" title="Download {{ document.number }} as PDF"><span class="material-symbols-rounded" aria-hidden="true">download</span> PDF</a>
             <a href="{% url 'documents:edit' document.pk %}"><span class="material-symbols-rounded" aria-hidden="true">edit</span> Edit</a>
             {% if document.doc_type == 'quotation' %}
             <form method="post" action="{% url 'documents:convert' document.pk %}">{% csrf_token %}<button type="submit"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span> Convert</button></form>
+            <form method="post" action="{% url 'documents:delete' document.pk %}" onsubmit="return confirm('Delete quotation {{ document.number }}? This cannot be undone.');">{% csrf_token %}<button type="submit" title="Delete quotation {{ document.number }}"><span class="material-symbols-rounded" aria-hidden="true">delete</span> Delete</button></form>
             {% endif %}
             {% if document.doc_type == 'invoice' and document.status != 'paid' %}
             <form method="post" action="{% url 'documents:mark-paid' document.pk %}">{% csrf_token %}<input type="hidden" name="paid_date" value="{% now 'Y-m-d' %}"><input type="hidden" name="payment_method" value="cash"><button type="submit"><span class="material-symbols-rounded" aria-hidden="true">payments</span> Mark paid</button></form>
