@@ -61,6 +61,8 @@ class Document(models.Model):
 
 	doc_type = models.CharField(max_length=12, choices=DocumentType.choices)
 	number = models.CharField(max_length=16, unique=True, blank=True)
+	invoice_number = models.CharField(max_length=64, blank=True)
+	lpo_number = models.CharField(max_length=64, blank=True)
 	issue_date = models.DateField(default=timezone.localdate)
 	valid_until = models.DateField(null=True, blank=True)
 	due_date = models.DateField(null=True, blank=True)

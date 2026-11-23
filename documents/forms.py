@@ -16,6 +16,8 @@ class DocumentForm(forms.ModelForm):
         model = Document
         fields = (
             "doc_type",
+            "invoice_number",
+            "lpo_number",
             "issue_date",
             "valid_until",
             "due_date",
@@ -31,6 +33,8 @@ class DocumentForm(forms.ModelForm):
         )
         widgets = {
             "doc_type": forms.Select(attrs={"class": "field-input"}),
+            "invoice_number": forms.TextInput(attrs={"class": "field-input"}),
+            "lpo_number": forms.TextInput(attrs={"class": "field-input"}),
             "issue_date": forms.DateInput(attrs={"type": "date", "class": "field-input"}),
             "valid_until": forms.DateInput(attrs={"type": "date", "class": "field-input"}),
             "due_date": forms.DateInput(attrs={"type": "date", "class": "field-input"}),
@@ -46,6 +50,8 @@ class DocumentForm(forms.ModelForm):
         }
         labels = {
             "doc_type": "Document type",
+            "invoice_number": "Invoice number",
+            "lpo_number": "LPO number",
             "issue_date": "Issue date",
             "valid_until": "Valid until",
             "due_date": "Due date",

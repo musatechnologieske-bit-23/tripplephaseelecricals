@@ -10,7 +10,6 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import (
 	Image,
-	KeepTogether,
 	Paragraph,
 	SimpleDocTemplate,
 	Spacer,
@@ -20,7 +19,6 @@ from reportlab.platypus import (
 
 
 RED = colors.HexColor("#E10600")
-BLUE = colors.HexColor("#0A2EFF")
 INK = colors.HexColor("#171717")
 MUTED = colors.HexColor("#555555")
 LINE = colors.HexColor("#D9DCE5")
@@ -58,6 +56,17 @@ def render_document_pdf(document, company):
 		ParagraphStyle(
 			name="Heading", parent=styles["Normal"], fontSize=17, leading=20,
 			textColor=RED, alignment=TA_RIGHT, fontName="Helvetica-Bold",
+		)
+	)
+	styles.add(
+		ParagraphStyle(
+			name="InvoiceHeading", parent=styles["Heading"], textColor=INK,
+		)
+	)
+	styles.add(
+		ParagraphStyle(
+			name="CompanyName", parent=styles["Normal"], fontSize=9, leading=12,
+			textColor=INK, fontName="Helvetica-Bold",
 		)
 	)
 	styles.add(
@@ -113,8 +122,6 @@ def render_document_pdf(document, company):
 	styles.add(
 		ParagraphStyle(name="SectionTitle", parent=styles["Normal"], fontSize=8, leading=10, fontName="Helvetica-Bold")
 	)
-	styles.add(ParagraphStyle(name="BlueHeader", parent=styles["TableHeader"], textColor=colors.white))
-
 	buffer = BytesIO()
 	pdf = SimpleDocTemplate(
 		buffer,
@@ -131,11 +138,20 @@ def render_document_pdf(document, company):
 	logo = Image(str(logo_path), width=45 * mm, height=20 * mm, kind="proportional")
 
 	doc_type = document.get_doc_type_display().upper()
-	heading = [
-		Paragraph(escape(doc_type), styles["Heading"]),
-		Paragraph(escape(document.number), styles["DocNumber"]),
-		Paragraph(escape(company.kra_pin), styles["SmallRight"]),
-	]
+	number_label = (
+		f"Invoice No: {document.invoice_number or document.number}"
+		if document.doc_type == "invoice"
+		else f"Quotation No: {document.number}"
+	)
+	heading = [Paragraph(escape(number_label), styles["DocNumber"])]
+	if document.lpo_number:
+		heading.append(Paragraph(f"LPO No: {escape(document.lpo_number)}", styles["SmallRight"]))
+	heading.append(
+		Paragraph(
+			escape(doc_type),
+			styles["InvoiceHeading"] if document.doc_type == "invoice" else styles["Heading"],
+		)
+	)
 	if document.doc_type == "quotation":
 		heading.append(
 			Paragraph(
@@ -145,10 +161,22 @@ def render_document_pdf(document, company):
 		)
 
 	company_contact = "\n".join(
-		part for part in (company.address, company.phone, company.email) if part
+		part
+		for part in (
+			company.address,
+			company.phone,
+			company.email,
+			f"KRA PIN: {company.kra_pin}" if company.kra_pin else "",
+		)
+		if part
 	)
 	header = Table(
-		[[[logo, _paragraph(company_contact, styles["Company"])], heading]],
+		[
+			[
+				[logo, _paragraph(company.name.title(), styles["CompanyName"]), _paragraph(company_contact, styles["Company"])],
+				heading,
+			]
+		],
 		colWidths=[width * 0.66, width * 0.34],
 	)
 	header.setStyle(
@@ -163,7 +191,6 @@ def render_document_pdf(document, company):
 	)
 
 	client_lines = [
-		Paragraph("PREPARED FOR", styles["Eyebrow"]),
 		_paragraph(document.client_name, styles["Client"]),
 	]
 	client_details = "\n".join(
@@ -202,14 +229,16 @@ def render_document_pdf(document, company):
 	)
 
 	items = [[
+		_paragraph("NO.", styles["TableHeader"]),
 		_paragraph("DESCRIPTION", styles["TableHeader"]),
 		_paragraph("QTY", styles["TableHeader"]),
 		_paragraph("UNIT PRICE (KES)", styles["TableHeader"]),
 		_paragraph("AMOUNT (KES)", styles["TableHeader"]),
 	]]
-	for item in document.items.all():
+	for index, item in enumerate(document.items.all(), start=1):
 		items.append(
 			[
+				_paragraph(str(index), styles["TableNumber"]),
 				_paragraph(item.description, styles["TableCell"]),
 				_paragraph(f"{item.quantity:,.2f}", styles["TableNumber"]),
 				_paragraph(f"{item.unit_price:,.2f}", styles["TableNumber"]),
@@ -218,7 +247,7 @@ def render_document_pdf(document, company):
 		)
 	item_table = Table(
 		items,
-		colWidths=[width * 0.48, width * 0.10, width * 0.20, width * 0.22],
+		colWidths=[width * 0.06, width * 0.42, width * 0.10, width * 0.20, width * 0.22],
 		repeatRows=1,
 		hAlign="LEFT",
 	)
@@ -271,38 +300,23 @@ def render_document_pdf(document, company):
 	details = Table(
 		[
 			[
-				_paragraph("PAYABLE TO", styles["BlueHeader"]),
-				_paragraph("BANKING DETAILS", styles["BlueHeader"]),
-				_paragraph("OTHER DETAILS", styles["BlueHeader"]),
+				_paragraph("PAYABLE TO", styles["TableHeader"]),
+				_paragraph("BANKING DETAILS", styles["TableHeader"]),
 			],
 			[
 				[
 					_paragraph(company.name, styles["SectionTitle"]),
 					_paragraph(company.address, styles["BodySmall"]),
-					_paragraph(
-						"\n".join(part for part in (company.phone, company.email) if part),
-						styles["BodySmall"],
-					),
 				],
-				_paragraph(company.payment_details, styles["BodySmall"]),
-				_paragraph(
-					f"Tripple Phase Electricals Limited\nCurrency: KES\nKRA PIN: {company.kra_pin}\n"
-					f"{doc_type.title()}: {document.number}"
-					+ (
-						f"\nPayment term: {document.get_payment_terms_display()}"
-						if document.payment_terms
-						else ""
-					),
-					styles["BodySmall"],
-				),
+				_paragraph(f"{company.payment_details}\nCurrency: KES", styles["BodySmall"]),
 			],
 		],
-		colWidths=[width / 3] * 3,
+		colWidths=[width * 0.42, width * 0.58],
 	)
 	details.setStyle(
 		TableStyle(
 			[
-				("BACKGROUND", (0, 0), (-1, 0), BLUE),
+				("BACKGROUND", (0, 0), (-1, 0), INK),
 				("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#AEB9D0")),
 				("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#AEB9D0")),
 				("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -331,36 +345,6 @@ def render_document_pdf(document, company):
 				_paragraph(company.terms, styles["BodySmall"]),
 			]
 		)
-	story.extend(
-		[
-			Spacer(1, 3 * mm),
-			details,
-			Spacer(1, 4 * mm),
-			KeepTogether(
-				[
-					Table(
-						[
-							[
-								Paragraph(
-									'<font color="#0A2EFF"><i>Jacinta</i></font><br/>'
-									'<font color="#171717">_________________________</font><br/>'
-									'<font color="#555555">Authorized signature</font>',
-									styles["BodySmall"],
-								),
-								Paragraph(
-									f"Prepared by {escape(document.created_by.get_full_name() or document.created_by.username)}"
-									f"<br/>{escape(_date(document.issue_date))}",
-									styles["SmallRight"],
-								),
-							]
-						],
-						colWidths=[width * 0.5, width * 0.5],
-					),
-					Spacer(1, 2 * mm),
-					Paragraph("Thank you for your business.", styles["BodySmall"]),
-				]
-			),
-		]
-	)
+	story.extend([Spacer(1, 3 * mm), details])
 	pdf.build(story, onFirstPage=_page_number, onLaterPages=_page_number)
 	return buffer.getvalue()

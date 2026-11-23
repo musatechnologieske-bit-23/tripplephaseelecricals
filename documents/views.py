@@ -202,6 +202,8 @@ def document_duplicate(request, pk):
 
 	duplicate = Document(
 		doc_type=source.doc_type,
+		invoice_number=source.invoice_number,
+		lpo_number=source.lpo_number,
 		issue_date=timezone.localdate(),
 		valid_until=source.valid_until,
 		due_date=source.due_date,
@@ -252,6 +254,8 @@ def document_convert(request, pk):
 		client_email=quotation.client_email,
 		client_address=quotation.client_address,
 		client_pin=quotation.client_pin,
+		invoice_number=quotation.invoice_number,
+		lpo_number=quotation.lpo_number,
 		notes=quotation.notes,
 		payment_terms=quotation.payment_terms,
 		apply_vat=quotation.apply_vat,

@@ -140,7 +140,11 @@ class DocumentModelTests(TestCase):
 		self.assertEqual(duplicate.items.first().description, "Cable")
 
 	def test_convert_quotation_to_invoice_links_original_document(self):
-		quotation = self.make_document(doc_type=DocumentType.QUOTATION)
+		quotation = self.make_document(
+			doc_type=DocumentType.QUOTATION,
+			invoice_number="CLIENT-INV-042",
+			lpo_number="LPO-2026-009",
+		)
 		customer = Customer.objects.create(name="Saved Client")
 		quotation.customer = customer
 		quotation.save(update_fields=["customer"])
@@ -161,6 +165,8 @@ class DocumentModelTests(TestCase):
 		self.assertEqual(converted.status, Document.Status.UNPAID)
 		self.assertEqual(converted.converted_from, quotation)
 		self.assertEqual(converted.customer, customer)
+		self.assertEqual(converted.invoice_number, "CLIENT-INV-042")
+		self.assertEqual(converted.lpo_number, "LPO-2026-009")
 		self.assertEqual(quotation.status, Document.Status.CONVERTED)
 
 	def test_mark_invoice_paid_records_payment(self):
@@ -200,6 +206,8 @@ class DocumentModelTests(TestCase):
 				"client_email": "",
 				"client_address": "",
 				"client_pin": "",
+				"invoice_number": "CLIENT-INV-020",
+				"lpo_number": "LPO-020",
 				"notes": "",
 				"payment_terms": "cash",
 				"apply_vat": "on",
@@ -223,6 +231,8 @@ class DocumentModelTests(TestCase):
 		self.assertEqual(quotation.number, original_number)
 		self.assertEqual(quotation.status, Document.Status.SENT)
 		self.assertEqual(quotation.client_name, "Updated Client")
+		self.assertEqual(quotation.invoice_number, "CLIENT-INV-020")
+		self.assertEqual(quotation.lpo_number, "LPO-020")
 		self.assertEqual(quotation.items.get().description, "Installed cable")
 		self.assertEqual(quotation.total, Decimal("522.00"))
 
@@ -241,6 +251,8 @@ class DocumentFormTests(TestCase):
 				"valid_until": "",
 				"due_date": "",
 				"client_name": "Example Client",
+				"invoice_number": "CLIENT-INV-100",
+				"lpo_number": "LPO-100",
 				"client_phone": "",
 				"client_email": "",
 				"client_address": "",
@@ -265,6 +277,8 @@ class DocumentFormTests(TestCase):
 		self.assertEqual(document.subtotal, Decimal("2000.00"))
 		self.assertEqual(document.vat_amount, Decimal("320.00"))
 		self.assertEqual(document.total, Decimal("2320.00"))
+		self.assertEqual(document.invoice_number, "CLIENT-INV-100")
+		self.assertEqual(document.lpo_number, "LPO-100")
 		self.assertEqual(document.items.count(), 1)
 		self.assertIsNone(document.customer)
 
@@ -529,7 +543,28 @@ class DocumentPrintTests(TestCase):
 		self.assertContains(response, "data:image/png;base64")
 		self.assertContains(response, "Banking Details")
 		self.assertContains(response, "Payable To")
-		self.assertContains(response, "Jacinta")
+		self.assertContains(response, "Tripple Phase Electricals Limited")
+		self.assertContains(response, "KRA PIN: P051777360U")
+		self.assertContains(response, "Currency: KES")
+		self.assertContains(response, "No.")
+		self.assertNotContains(response, "Prepared for")
+		self.assertNotContains(response, "Other Details")
+		self.assertNotContains(response, "Authorized signature")
+		self.assertNotContains(response, "Prepared by")
+		self.assertNotContains(response, "Jacinta")
+
+	def test_invoice_number_and_lpo_print_before_black_invoice_heading(self):
+		self.document.invoice_number = "CLIENT-INV-401"
+		self.document.lpo_number = "LPO-401"
+		self.document.save(update_fields=["invoice_number", "lpo_number"])
+
+		response = self.client.get(reverse("documents:print", args=(self.document.pk,)))
+		content = response.content.decode()
+
+		self.assertEqual(response.status_code, 200)
+		self.assertLess(content.index("Invoice No: CLIENT-INV-401"), content.index("LPO No: LPO-401"))
+		self.assertLess(content.index("LPO No: LPO-401"), content.index(">INVOICE</h1>"))
+		self.assertContains(response, "color: #171717")
 
 	def test_print_view_omits_vat_when_disabled(self):
 		self.document.apply_vat = False
