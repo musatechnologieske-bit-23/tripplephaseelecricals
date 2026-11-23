@@ -584,7 +584,7 @@ class DocumentPrintTests(TestCase):
 		self.assertLess(content.index(">QUOTATION</h1>"), content.index(number_markup))
 		self.assertContains(response, "color: #171717")
 
-	def test_issue_date_is_left_aligned_below_client_and_above_items(self):
+	def test_issue_date_is_right_aligned_next_to_client_above_items(self):
 		quotation = Document.objects.create(
 			doc_type=DocumentType.QUOTATION,
 			client_name="Quotation client",
@@ -602,7 +602,10 @@ class DocumentPrintTests(TestCase):
 				self.assertEqual(response.status_code, 200)
 				self.assertLess(client_position, date_position)
 				self.assertLess(date_position, items_position)
-				self.assertIn(".date-details { margin-top: 8px; text-align: left; }", content)
+				self.assertIn(".metadata { display: flex;", content)
+				self.assertIn(".date-details { margin-top: 4px; text-align: right; }", content)
+				if document.doc_type == DocumentType.QUOTATION:
+					self.assertNotContains(response, "Valid until")
 
 	def test_print_view_omits_vat_when_disabled(self):
 		self.document.apply_vat = False

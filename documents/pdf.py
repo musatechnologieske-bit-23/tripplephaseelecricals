@@ -4,7 +4,7 @@ from pathlib import Path
 
 from django.conf import settings
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
@@ -73,11 +73,6 @@ def render_document_pdf(document, company):
 		ParagraphStyle(
 			name="SmallRight", parent=styles["Normal"], fontSize=8, leading=11,
 			textColor=MUTED, alignment=TA_RIGHT,
-		)
-	)
-	styles.add(
-		ParagraphStyle(
-			name="DateDetails", parent=styles["SmallRight"], alignment=TA_LEFT,
 		)
 	)
 	styles.add(
@@ -194,16 +189,15 @@ def render_document_pdf(document, company):
 	date_lines = [
 		f"<b>Issue date</b> &nbsp; {escape(_date(document.issue_date))}",
 	]
-	if document.doc_type == "quotation" and document.valid_until:
-		date_lines.append(f"<b>Valid until</b> &nbsp; {escape(_date(document.valid_until))}")
 	if document.doc_type == "invoice" and document.due_date:
 		date_lines.append(f"<b>Due date</b> &nbsp; {escape(_date(document.due_date))}")
-	dates = Paragraph("<br/>".join(date_lines), styles["DateDetails"])
-	metadata = Table([[client_lines + [dates]]], colWidths=[width])
+	dates = Paragraph("<br/>".join(date_lines), styles["SmallRight"])
+	metadata = Table([[client_lines, dates]], colWidths=[width * 0.58, width * 0.42])
 	metadata.setStyle(
 		TableStyle(
 			[
 				("VALIGN", (0, 0), (-1, -1), "TOP"),
+				("ALIGN", (1, 0), (1, 0), "RIGHT"),
 				("TOPPADDING", (0, 0), (-1, -1), 12),
 				("BOTTOMPADDING", (0, 0), (-1, -1), 8),
 			]

@@ -31,11 +31,11 @@
     .document-heading h1 { margin: 0 0 5px; color: #171717; font-size: 18pt; line-height: 1.1; }
     .document-number { margin-top: 0; font-size: 9pt; font-weight: 700; }
     .document-number + .document-number { margin-top: 3px; }
-    .metadata { padding: 16px 0 12px; }
+    .metadata { display: flex; justify-content: space-between; gap: 20px; padding: 16px 0 12px; }
     .eyebrow { margin: 0 0 5px; color: #737373; font-size: 8pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
     .client-name { margin: 0; font-size: 12pt; font-weight: 700; }
     .client-details, .date-details { margin-top: 4px; color: #444; font-size: 9pt; white-space: pre-line; }
-    .date-details { margin-top: 8px; text-align: left; }
+    .date-details { margin-top: 4px; text-align: right; }
     table { width: 100%; border-collapse: collapse; }
     .items { margin-top: 6px; }
     .items thead { display: table-header-group; }
@@ -119,11 +119,10 @@
         <div class="client-details">{% if document.client_address %}{{ document.client_address }}{% endif %}{% if document.client_phone %}
 {{ document.client_phone }}{% endif %}{% if document.client_email %}
 {{ document.client_email }}{% endif %}{% if document.client_pin %} {{ document.client_pin }}{% endif %}</div>
-        <div class="date-details">
-          <p><strong>Issue date</strong> &nbsp; {{ document.issue_date|date:"d M Y" }}</p>
-          {% if document.doc_type == "quotation" and document.valid_until %}<p><strong>Valid until</strong> &nbsp; {{ document.valid_until|date:"d M Y" }}</p>{% endif %}
-          {% if document.doc_type == "invoice" and document.due_date %}<p><strong>Due date</strong> &nbsp; {{ document.due_date|date:"d M Y" }}</p>{% endif %}
-        </div>
+      </div>
+      <div class="date-details">
+        <p><strong>Issue date</strong> &nbsp; {{ document.issue_date|date:"d M Y" }}</p>
+        {% if document.doc_type == "invoice" and document.due_date %}<p><strong>Due date</strong> &nbsp; {{ document.due_date|date:"d M Y" }}</p>{% endif %}
       </div>
     </section>
 
