@@ -4,7 +4,7 @@ from pathlib import Path
 
 from django.conf import settings
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_RIGHT
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
@@ -18,7 +18,6 @@ from reportlab.platypus import (
 )
 
 
-RED = colors.HexColor("#E10600")
 INK = colors.HexColor("#171717")
 MUTED = colors.HexColor("#555555")
 LINE = colors.HexColor("#D9DCE5")
@@ -55,12 +54,7 @@ def render_document_pdf(document, company):
 	styles.add(
 		ParagraphStyle(
 			name="Heading", parent=styles["Normal"], fontSize=17, leading=20,
-			textColor=RED, alignment=TA_RIGHT, fontName="Helvetica-Bold",
-		)
-	)
-	styles.add(
-		ParagraphStyle(
-			name="InvoiceHeading", parent=styles["Heading"], textColor=INK,
+			textColor=INK, alignment=TA_RIGHT, fontName="Helvetica-Bold",
 		)
 	)
 	styles.add(
@@ -79,6 +73,11 @@ def render_document_pdf(document, company):
 		ParagraphStyle(
 			name="SmallRight", parent=styles["Normal"], fontSize=8, leading=11,
 			textColor=MUTED, alignment=TA_RIGHT,
+		)
+	)
+	styles.add(
+		ParagraphStyle(
+			name="DateDetails", parent=styles["SmallRight"], alignment=TA_LEFT,
 		)
 	)
 	styles.add(
@@ -138,27 +137,13 @@ def render_document_pdf(document, company):
 	logo = Image(str(logo_path), width=45 * mm, height=20 * mm, kind="proportional")
 
 	doc_type = document.get_doc_type_display().upper()
-	number_label = (
-		f"Invoice No: {document.invoice_number or document.number}"
-		if document.doc_type == "invoice"
-		else f"Quotation No: {document.number}"
-	)
-	heading = [Paragraph(escape(number_label), styles["DocNumber"])]
+	heading = [Paragraph(escape(doc_type), styles["Heading"])]
+	number = document.number
+	if document.doc_type == "invoice" and document.invoice_number:
+		number = document.invoice_number
+	heading.append(Paragraph(escape(number), styles["DocNumber"]))
 	if document.lpo_number:
-		heading.append(Paragraph(f"LPO No: {escape(document.lpo_number)}", styles["SmallRight"]))
-	heading.append(
-		Paragraph(
-			escape(doc_type),
-			styles["InvoiceHeading"] if document.doc_type == "invoice" else styles["Heading"],
-		)
-	)
-	if document.doc_type == "quotation":
-		heading.append(
-			Paragraph(
-				f"Payment term: {escape(document.get_payment_terms_display())}",
-				styles["SmallRight"],
-			)
-		)
+		heading.append(Paragraph(escape(document.lpo_number), styles["SmallRight"]))
 
 	company_contact = "\n".join(
 		part
@@ -166,7 +151,7 @@ def render_document_pdf(document, company):
 			company.address,
 			company.phone,
 			company.email,
-			f"KRA PIN: {company.kra_pin}" if company.kra_pin else "",
+			company.kra_pin,
 		)
 		if part
 	)
@@ -213,15 +198,12 @@ def render_document_pdf(document, company):
 		date_lines.append(f"<b>Valid until</b> &nbsp; {escape(_date(document.valid_until))}")
 	if document.doc_type == "invoice" and document.due_date:
 		date_lines.append(f"<b>Due date</b> &nbsp; {escape(_date(document.due_date))}")
-	if document.payment_terms:
-		date_lines.append(f"<b>Payment term</b> &nbsp; {escape(document.get_payment_terms_display())}")
-	dates = Paragraph("<br/>".join(date_lines), styles["SmallRight"])
-	metadata = Table([[client_lines, dates]], colWidths=[width * 0.58, width * 0.42])
+	dates = Paragraph("<br/>".join(date_lines), styles["DateDetails"])
+	metadata = Table([[client_lines + [dates]]], colWidths=[width])
 	metadata.setStyle(
 		TableStyle(
 			[
 				("VALIGN", (0, 0), (-1, -1), "TOP"),
-				("ALIGN", (1, 0), (1, 0), "RIGHT"),
 				("TOPPADDING", (0, 0), (-1, -1), 12),
 				("BOTTOMPADDING", (0, 0), (-1, -1), 8),
 			]

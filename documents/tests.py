@@ -544,16 +544,18 @@ class DocumentPrintTests(TestCase):
 		self.assertContains(response, "Banking Details")
 		self.assertContains(response, "Payable To")
 		self.assertContains(response, "Tripple Phase Electricals Limited")
-		self.assertContains(response, "KRA PIN: P051777360U")
+		self.assertContains(response, "P051777360U")
 		self.assertContains(response, "Currency: KES")
 		self.assertContains(response, "No.")
+		self.assertNotContains(response, "KRA PIN:")
+		self.assertNotContains(response, "Payment term")
 		self.assertNotContains(response, "Prepared for")
 		self.assertNotContains(response, "Other Details")
 		self.assertNotContains(response, "Authorized signature")
 		self.assertNotContains(response, "Prepared by")
 		self.assertNotContains(response, "Jacinta")
 
-	def test_invoice_number_and_lpo_print_before_black_invoice_heading(self):
+	def test_invoice_heading_precedes_unlabelled_number_and_lpo(self):
 		self.document.invoice_number = "CLIENT-INV-401"
 		self.document.lpo_number = "LPO-401"
 		self.document.save(update_fields=["invoice_number", "lpo_number"])
@@ -562,9 +564,45 @@ class DocumentPrintTests(TestCase):
 		content = response.content.decode()
 
 		self.assertEqual(response.status_code, 200)
-		self.assertLess(content.index("Invoice No: CLIENT-INV-401"), content.index("LPO No: LPO-401"))
-		self.assertLess(content.index("LPO No: LPO-401"), content.index(">INVOICE</h1>"))
+		self.assertLess(content.index(">INVOICE</h1>"), content.index("CLIENT-INV-401"))
+		self.assertLess(content.index("CLIENT-INV-401"), content.index("LPO-401"))
+		self.assertNotContains(response, "Invoice No:")
+		self.assertNotContains(response, "LPO No:")
 		self.assertContains(response, "color: #171717")
+
+	def test_quotation_heading_is_black_and_precedes_unlabelled_number(self):
+		quotation = Document.objects.create(
+			doc_type=DocumentType.QUOTATION,
+			client_name="Quotation client",
+			created_by=self.user,
+		)
+
+		response = self.client.get(reverse("documents:print", args=(quotation.pk,)))
+		content = response.content.decode()
+
+		number_markup = f'<div class="document-number">{quotation.number}</div>'
+		self.assertLess(content.index(">QUOTATION</h1>"), content.index(number_markup))
+		self.assertContains(response, "color: #171717")
+
+	def test_issue_date_is_left_aligned_below_client_and_above_items(self):
+		quotation = Document.objects.create(
+			doc_type=DocumentType.QUOTATION,
+			client_name="Quotation client",
+			created_by=self.user,
+		)
+
+		for document in (self.document, quotation):
+			with self.subTest(doc_type=document.doc_type):
+				response = self.client.get(reverse("documents:print", args=(document.pk,)))
+				content = response.content.decode()
+				client_position = content.index(f'class="client-name">{document.client_name}</p>')
+				date_position = content.index('<div class="date-details">')
+				items_position = content.index('<table class="items">')
+
+				self.assertEqual(response.status_code, 200)
+				self.assertLess(client_position, date_position)
+				self.assertLess(date_position, items_position)
+				self.assertIn(".date-details { margin-top: 8px; text-align: left; }", content)
 
 	def test_print_view_omits_vat_when_disabled(self):
 		self.document.apply_vat = False
