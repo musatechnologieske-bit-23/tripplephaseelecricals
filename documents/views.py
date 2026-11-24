@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def _logo_data_uri():
-	logo_path = Path(settings.BASE_DIR) / "static" / "img" / "tripplephase-wordmark.png"
+	logo_path = Path(settings.BASE_DIR) / "static" / "img" / "tripplephase-wordmark-capital.png"
 	logo_bytes = logo_path.read_bytes()
 	content_type = mimetypes.guess_type(logo_path.name)[0] or "image/png"
 	encoded_logo = base64.b64encode(logo_bytes).decode("ascii")

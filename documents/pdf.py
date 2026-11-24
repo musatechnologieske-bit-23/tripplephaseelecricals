@@ -128,7 +128,7 @@ def render_document_pdf(document, company):
 		author=company.name,
 	)
 	width = A4[0] - 28 * mm
-	logo_path = Path(settings.BASE_DIR) / "static" / "img" / "tripplephase-wordmark.png"
+	logo_path = Path(settings.BASE_DIR) / "static" / "img" / "tripplephase-wordmark-capital.png"
 	logo = Image(str(logo_path), width=45 * mm, height=20 * mm, kind="proportional")
 
 	doc_type = document.get_doc_type_display().upper()
